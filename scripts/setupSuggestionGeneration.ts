@@ -21,12 +21,14 @@ export async function buildSetupSuggestions({
   houseSource,
   manifest,
   token,
+  requireEnrichment = false,
   fetcher = fetch
 }: {
   houseRows: HouseIntakeRow[];
   houseSource: string;
   manifest: MatchingRow[];
   token?: string;
+  requireEnrichment?: boolean;
   fetcher?: typeof fetch;
 }): Promise<SetupSuggestionsPayload> {
   const sourceSha = gitBlobSha(houseSource);
@@ -34,6 +36,9 @@ export async function buildSetupSuggestions({
   const matchedGames = manifest.filter(
     (row) => row.kind === "game" && row.knownBggId !== undefined && houseSlugs.has(row.slug)
   );
+  if (requireEnrichment && matchedGames.length && !token) {
+    throw new Error("BGG_API_TOKEN is required to enrich the Setup questionnaire.");
+  }
   if (!token || !matchedGames.length) {
     return { schemaVersion: 1, sourceSha, enriched: false, suggestions: [] };
   }

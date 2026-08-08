@@ -63,10 +63,10 @@ export function SetupAccessGate() {
       const query = new URLSearchParams(window.location.search);
       const code = query.get("code");
       const oauthState = query.get("state");
-      if (code || oauthState) {
-        const authValues = takeSetupAuthValues();
+      const authValues = takeSetupAuthValues();
+      if (authValues) {
         removeSetupAuthQuery();
-        if (!code || !oauthState || !authValues) {
+        if (!code || !oauthState) {
           setState({
             kind: "failed",
             message: "The GitHub verification response was incomplete. Please try again."
@@ -90,6 +90,14 @@ export function SetupAccessGate() {
             message: cause instanceof Error ? cause.message : "GitHub verification failed."
           });
         }
+        return;
+      }
+      if (code || oauthState) {
+        removeSetupAuthQuery();
+        setState({
+          kind: "failed",
+          message: "The GitHub verification response was incomplete. Please try again."
+        });
         return;
       }
 
@@ -123,8 +131,8 @@ export function SetupAccessGate() {
   if (state.kind === "verified") {
     return (
       <>
-        <div class="setup-access-bar" role="status">
-          <span>
+        <div class="setup-access-bar">
+          <span role="status">
             Verified collaborator: <strong>@{state.session.login}</strong>
           </span>
           <button
@@ -180,8 +188,8 @@ export function SetupAccessGate() {
           <>
             <h1 id="setup-access-title">Collaborator verification required</h1>
             <p>
-              Sign in with GitHub. The setup questionnaire stays hidden unless this account can
-              write to the inventory repository.
+              Sign in with GitHub. The setup questionnaire stays hidden unless this account can edit
+              this library.
             </p>
             <button
               class="primary-button"

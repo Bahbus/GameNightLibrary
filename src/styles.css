@@ -14,6 +14,7 @@
   --purple: #5c3c94;
   --purple-dark: #2a1b46;
   --orange: #ee6c45;
+  --orange-ink: #a93717;
   --gold: #f5bd45;
   --mint: #b9e4cd;
   --cream: #fffaf1;
@@ -658,6 +659,7 @@ output {
   inset: 0;
   border: 0;
   background: rgb(35 27 51 / 55%);
+  cursor: pointer;
 }
 
 .game-inspector {
@@ -1001,7 +1003,7 @@ output {
 }
 
 .winner-kicker {
-  color: var(--orange);
+  color: var(--orange-ink);
   font-size: 0.64rem;
   font-weight: 900;
   letter-spacing: 0.12em;
@@ -1267,7 +1269,7 @@ output {
 }
 
 .operation-picker label small {
-  color: #74697d;
+  color: #665b6f;
   font-size: 0.68rem;
   font-weight: 600;
   line-height: 1.35;
@@ -2417,5 +2419,27 @@ footer p {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+@media (forced-colors: active) {
+  nav button.is-active,
+  .operation-picker label.is-active,
+  .chip.is-active,
+  .setup-game-list button.is-current {
+    outline: 2px solid CanvasText;
+    outline-offset: -2px;
+  }
+
+  .tag,
+  .match-pill,
+  .complete-badge,
+  .wishlist-badges span {
+    border: 1px solid CanvasText;
+  }
+
+  .inspector-backdrop {
+    background: Canvas;
+    opacity: 0.75;
   }
 }

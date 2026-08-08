@@ -134,6 +134,14 @@ describe("BGG-backed setup suggestions", () => {
       enriched: false,
       suggestions: []
     });
+    await expect(
+      buildSetupSuggestions({
+        houseRows: [houseRow],
+        houseSource,
+        manifest: [matchingRow],
+        requireEnrichment: true
+      })
+    ).rejects.toThrow(/BGG_API_TOKEN/);
 
     const fetcher = async () =>
       new Response(

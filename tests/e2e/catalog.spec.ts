@@ -82,19 +82,23 @@ test("gives each primary view its own heading without repeating the library hero
   page
 }) => {
   await expect(page.locator(".hero")).toBeVisible();
+  await expect(page).toHaveTitle("Library | Game Night Library");
   await expect(
     page.getByRole("heading", { level: 1, name: "Find the game that fits the table." })
   ).toBeVisible();
 
   await page.getByRole("button", { name: "Roulette", exact: true }).click();
+  await expect(page).toHaveTitle("Roulette | Game Night Library");
   await expect(page.locator(".hero")).toHaveCount(0);
   await expect(page.getByRole("heading", { level: 1, name: "Game Night Roulette" })).toBeVisible();
 
   await page.getByRole("button", { name: "Wish list", exact: true }).click();
+  await expect(page).toHaveTitle("Wish list | Game Night Library");
   await expect(page.locator(".hero")).toHaveCount(0);
   await expect(page.getByRole("heading", { level: 1, name: "Wish list & requests" })).toBeVisible();
 
   await page.getByRole("button", { name: "Manage", exact: true }).click();
+  await expect(page).toHaveTitle("Manage | Game Night Library");
   await expect(page.locator(".hero")).toHaveCount(0);
   await expect(page.getByRole("heading", { level: 1, name: "Manage the library" })).toBeVisible();
 });
@@ -234,9 +238,15 @@ test("inspects a game without losing the catalog position", async ({ page }, tes
     const inspectorBox = await inspector.boundingBox();
     const triggerBox = await trigger.boundingBox();
     expect(inspectorBox!.x).toBeGreaterThan(triggerBox!.x);
-    await expect(page.getByRole("button", { name: "Close game details" })).toBeHidden();
+    await expect(inspector).not.toHaveAttribute("aria-modal");
+    await expect(page.locator(".inspector-backdrop")).toBeHidden();
   } else {
-    await expect(page.getByRole("button", { name: "Close game details" })).toBeVisible();
+    await expect(inspector).toHaveAttribute("aria-modal", "true");
+    await expect(page.locator(".inspector-backdrop")).toBeVisible();
+    const lastLink = inspector.getByRole("link", { name: /Suggest edit/ });
+    await lastLink.focus();
+    await page.keyboard.press("Tab");
+    await expect(inspector.getByRole("button", { name: /Close/ })).toBeFocused();
   }
 
   await page.keyboard.press("Escape");
@@ -289,10 +299,10 @@ test("prefills an authenticated GitHub maintenance request", async ({ page }) =>
   await page.getByRole("button", { name: "Manage" }).click();
   await page.getByLabel("Game name").fill("7 Wonders");
   await page
-    .getByLabel("BGG link or another product page")
+    .getByLabel("BoardGameGeek ID or product link")
     .fill("https://boardgamegeek.com/boardgame/68448/7-wonders");
   await expect(page.getByLabel("Stable slug")).toHaveValue("7-wonders");
-  const addButton = page.getByRole("button", { name: /Continue game details on GitHub/ });
+  const addButton = page.getByRole("button", { name: /Continue the add request on GitHub/ });
   await expect(addButton).toBeEnabled();
   await page.evaluate(() => {
     globalThis.open = (url, target, features) => {
@@ -317,11 +327,15 @@ test("prefills an authenticated GitHub maintenance request", async ({ page }) =>
 
   await page.getByRole("radio", { name: "Update" }).check();
   await page.getByLabel("Game or expansion").selectOption("forest-council");
-  await expect(page.getByRole("button", { name: /Choose changes on GitHub/ })).toBeEnabled();
+  await expect(
+    page.getByRole("button", { name: /Continue the update request on GitHub/ })
+  ).toBeEnabled();
 
   await page.getByRole("radio", { name: "Remove" }).check();
   await page.getByLabel("Game or expansion").selectOption("moonlit-paths");
-  await expect(page.getByRole("button", { name: /Review removal on GitHub/ })).toBeEnabled();
+  await expect(
+    page.getByRole("button", { name: /Continue the removal request on GitHub/ })
+  ).toBeEnabled();
 });
 
 test("keeps unowned games in a searchable wish list and out of roulette", async ({ page }) => {
@@ -382,7 +396,7 @@ test("keeps unowned games in a searchable wish list and out of roulette", async 
   ).toEqual([]);
   await page.getByLabel("Game name").fill("Sky Team");
   await page
-    .getByLabel(/BGG link, BGG ID, or product page/)
+    .getByLabel(/BoardGameGeek ID or product link/)
     .fill("https://boardgamegeek.com/boardgame/373106/sky-team");
   await page
     .getByLabel("Why should we consider it?")
@@ -397,7 +411,7 @@ test("keeps unowned games in a searchable wish list and out of roulette", async 
       return null;
     };
   });
-  await page.getByRole("button", { name: /Review on GitHub/ }).click();
+  await page.getByRole("button", { name: /Continue on GitHub/ }).click();
   const openedRequest = JSON.parse(
     (await page.evaluate(() => globalThis.sessionStorage.getItem("opened-wishlist-request"))) ??
       "{}"
@@ -470,9 +484,76 @@ test("shows a local-only game with its product source and slug-based edit link",
   );
 });
 
-test("has no automatically detectable accessibility violations", async ({ page }) => {
-  const results = await new AxeBuilder({ page }).analyze();
-  expect(results.violations).toEqual([]);
+test("has no automatically detectable accessibility violations in any public view", async ({
+  page
+}) => {
+  for (const view of ["Library", "Roulette", "Wish list", "Manage"] as const) {
+    await page.getByRole("button", { name: view, exact: true }).click();
+    const results = await new AxeBuilder({ page }).analyze();
+    expect(results.violations, `${view} accessibility violations`).toEqual([]);
+  }
+});
+
+test("reflows every public view at 320 CSS pixels without horizontal scrolling", async ({
+  page
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "Narrow reflow contract");
+  await page.setViewportSize({ width: 320, height: 800 });
+  for (const view of ["Library", "Roulette", "Wish list", "Manage"] as const) {
+    await page.getByRole("button", { name: view, exact: true }).click();
+    expect(
+      await page.evaluate(() => document.documentElement.scrollWidth),
+      `${view} should not scroll horizontally`
+    ).toBe(320);
+  }
+});
+
+test("accepts enlarged text spacing without clipping controls", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "Text-spacing contract");
+  await page.setViewportSize({ width: 320, height: 800 });
+  await page.evaluate(() => {
+    const sheet = document.styleSheets[0];
+    sheet.insertRule(
+      "* { line-height: 1.5 !important; letter-spacing: 0.12em !important; word-spacing: 0.16em !important; }",
+      sheet.cssRules.length
+    );
+    sheet.insertRule("p { margin-bottom: 2em !important; }", sheet.cssRules.length);
+  });
+  for (const view of ["Library", "Roulette", "Wish list", "Manage"] as const) {
+    await page.getByRole("button", { name: view, exact: true }).click();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(320);
+    const clippedButtons = await page
+      .locator("button")
+      .evaluateAll(
+        (buttons) => buttons.filter((button) => button.scrollHeight > button.clientHeight).length
+      );
+    expect(clippedButtons, `${view} has clipped buttons`).toBe(0);
+  }
+});
+
+test("preserves visible selected states in forced-colors mode", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "Forced-colors contract");
+  await page.emulateMedia({ forcedColors: "active" });
+  const libraryTab = page.getByRole("button", { name: "Library", exact: true });
+  await expect(libraryTab).toHaveCSS("outline-style", "solid");
+  await page.getByRole("button", { name: "Manage", exact: true }).click();
+  const addChoice = page.locator(".operation-picker label.is-active");
+  await expect(addChoice).toHaveCSS("outline-style", "solid");
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+});
+
+test("continues working when browser preference storage is unavailable", async ({ page }) => {
+  await page.addInitScript(() => {
+    globalThis.Storage.prototype.setItem = () => {
+      throw new globalThis.DOMException("Storage unavailable", "QuotaExceededError");
+    };
+  });
+  await page.reload();
+  await page.getByLabel("Group size").fill("6");
+  await expect(page.getByRole("heading", { name: "1 game ready" })).toBeVisible();
+  await page.getByRole("button", { name: "Roulette", exact: true }).click();
+  await page.getByRole("button", { name: "Spin the roulette" }).click();
+  await expect(page.getByText("Tonight’s pick")).toBeVisible();
 });
 
 test("labels external destinations and opens them safely", async ({ page }) => {
@@ -661,6 +742,7 @@ test("guides house answers one game at a time and keeps progress locally", async
   await allowSetup(page);
 
   await page.getByRole("button", { name: "Setup", exact: true }).click();
+  await expect(page).toHaveTitle("Setup | Game Night Library");
   await expect(page.getByText("Verified collaborator:")).toBeVisible();
   await expect(page.getByRole("heading", { name: "First Game" })).toBeVisible();
   const setupNavigator = page.getByRole("complementary", {
@@ -697,12 +779,15 @@ test("guides house answers one game at a time and keeps progress locally", async
   await expect(page.locator(".setup-autosave")).toHaveText(
     "Progress saves automatically on this device."
   );
+  await expect(
+    page.locator(".setup-progress:visible").getByRole("progressbar", { name: "Setup completion" })
+  ).toBeVisible();
   expect(
     await page
       .locator(".setup-privacy")
       .evaluate((element) => element.parentElement?.classList.contains("setup-shell"))
   ).toBe(true);
-  await expect(page.getByText("BGG suggestions are preselected.")).toBeVisible();
+  await expect(page.getByText("BoardGameGeek suggestions are preselected.")).toBeVisible();
   await expect(page.locator(".setup-tag-field legend")).toHaveText([
     "Mood or vibe",
     "Content considerations",
@@ -722,6 +807,10 @@ test("guides house answers one game at a time and keeps progress locally", async
   await expect(page.getByText("Progress saves automatically on this device.")).toBeVisible();
   await expect(page.getByRole("button", { name: "Back up progress" })).toHaveCount(0);
   await expect(page.getByText("Restore progress", { exact: true })).toHaveCount(0);
+  await page.getByRole("button", { name: "Save & next" }).click();
+  await expect(page.getByLabel("Have you learned it?")).toHaveAttribute("aria-invalid", "true");
+  await expect(page.getByLabel("Have you learned it?")).toBeFocused();
+  await expect(page.getByRole("alert")).toContainText("Choose whether the game has been learned.");
   await page.getByLabel("Have you learned it?").selectOption("yes");
   await page.getByLabel("Overall house rating").selectOption("4");
   await page.getByLabel("Setup time").selectOption("11-20");
@@ -755,6 +844,7 @@ test("guides house answers one game at a time and keeps progress locally", async
   await page.getByRole("button", { name: "Save & next" }).click();
 
   await expect(page.getByRole("heading", { name: "Local Game" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Local Game" })).toBeFocused();
   await expect(
     page.locator(".setup-progress:visible").getByText("1 of 2", { exact: true })
   ).toBeVisible();
@@ -774,11 +864,10 @@ test("guides house answers one game at a time and keeps progress locally", async
     page.locator(".setup-progress:visible").getByText("2 of 2", { exact: true })
   ).toBeVisible();
   await expect(page.getByText("Every game has a completed answer.")).toBeVisible();
-  await page.getByRole("button", { name: "Save to GitHub" }).click();
-  await expect(page.getByRole("link", { name: "Open pull request #42 on GitHub" })).toHaveAttribute(
-    "href",
-    "https://github.com/Bahbus/BoardGameInventory/pull/42"
-  );
+  await page.getByRole("button", { name: "Send for review" }).click();
+  await expect(
+    page.getByRole("link", { name: "View proposed update #42 on GitHub" })
+  ).toHaveAttribute("href", "https://github.com/Bahbus/BoardGameInventory/pull/42");
 
   const downloadPromise = page.waitForEvent("download");
   await page.getByRole("button", { name: "Download CSV copy" }).click();
@@ -810,6 +899,62 @@ test("keeps the guided setup screen free of detectable accessibility violations"
   await expect(page.getByRole("heading", { name: "Tell us about the games" })).toBeVisible();
   const results = await new AxeBuilder({ page }).analyze();
   expect(results.violations).toEqual([]);
+});
+
+test("waits for safe BoardGameGeek suggestions before showing editable answers", async ({
+  page
+}) => {
+  await page.route("**/test-setup-service/api/setup/questionnaire", (route) =>
+    route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        schemaVersion: 2,
+        sourceSha: setupSourceSha,
+        games: [setupGame]
+      })
+    })
+  );
+  await page.route("**/setup-suggestions.json", async (route) => {
+    await new Promise((resolve) => globalThis.setTimeout(resolve, 500));
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        schemaVersion: 1,
+        sourceSha: setupSourceSha,
+        enriched: true,
+        suggestions: [
+          {
+            slug: setupGame.slug,
+            bggId: 101,
+            moods: ["strategic"],
+            accessibilityFlags: [],
+            contentFlags: [],
+            categories: ["Strategy"],
+            mechanics: []
+          }
+        ]
+      })
+    });
+  });
+  await allowSetup(page);
+  await page.getByRole("button", { name: "Setup", exact: true }).click();
+  await expect(page.getByRole("status").filter({ hasText: "Preparing" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Accessible Game" })).toBeVisible();
+  await expect(page.getByLabel("Strategic / thinky")).toBeChecked();
+});
+
+test("rejects an OAuth callback that was not started in this browser", async ({ page }) => {
+  let exchangeRequests = 0;
+  await page.route("**/test-setup-service/api/setup/exchange", (route) => {
+    exchangeRequests += 1;
+    return route.abort();
+  });
+  await page.goto("/?v=1&view=setup&code=untrusted&state=untrusted");
+  await expect(
+    page.getByRole("heading", { name: "We couldn’t verify collaborator access" })
+  ).toBeVisible();
+  await expect(page.getByRole("alert")).toContainText("response was incomplete");
+  expect(exchangeRequests).toBe(0);
 });
 
 test("keeps intermediate setup guidance and actions legible", async ({ page }, testInfo) => {
@@ -854,6 +999,10 @@ test("keeps intermediate setup guidance and actions legible", async ({ page }, t
   expect(compactProgressBox!.y + compactProgressBox!.height).toBeLessThan(compactCopyBox!.y);
   expect(compactProgressBox!.width).toBeCloseTo(compactCopyBox!.width, 0);
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(480);
+
+  await page.setViewportSize({ width: 320, height: 800 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(320);
+  await expect(page.getByRole("heading", { name: "Accessible Game" })).toBeVisible();
 });
 
 test("fits a long setup game list to the questionnaire height", async ({ page }) => {
@@ -956,7 +1105,7 @@ test("shows the safe GitHub App recovery message when setup data cannot open", a
       body: JSON.stringify({
         code: "github_installation_auth",
         message:
-          "GitHub could not open the setup data. Please try again after the App installation is checked."
+          "GitHub could not open the setup data. Please try again later. If this continues, ask the library owner to check the GitHub connection."
       })
     })
   );
@@ -964,5 +1113,5 @@ test("shows the safe GitHub App recovery message when setup data cannot open", a
 
   await page.getByRole("button", { name: "Setup", exact: true }).click();
   await expect(page.getByRole("heading", { name: "We couldn’t open game setup" })).toBeVisible();
-  await expect(page.getByText(/App installation is checked/)).toBeVisible();
+  await expect(page.getByText(/ask the library owner/)).toBeVisible();
 });

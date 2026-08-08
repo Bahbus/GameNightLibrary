@@ -220,55 +220,69 @@ export function HouseEditor({
   const [index, setIndex] = useState(0);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [noticeKind, setNoticeKind] = useState<"status" | "error">("status");
+  const [validationAttempted, setValidationAttempted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submission, setSubmission] = useState<SetupSubmission>();
   const [progressSaved, setProgressSaved] = useState(true);
 
   useEffect(() => {
-    fetch(new URL("api/setup/questionnaire", serviceUrl), {
-      headers: { authorization: `Bearer ${grant}` }
-    })
-      .then((response) => {
+    let active = true;
+    const load = async () => {
+      try {
+        const response = await fetch(new URL("api/setup/questionnaire", serviceUrl), {
+          headers: { authorization: `Bearer ${grant}` }
+        });
         if (response.status === 401 || response.status === 403) {
           onVerificationLost();
-          throw new Error("GitHub collaborator verification is no longer valid.");
+          return;
         }
-        return response
-          .json()
-          .catch(() => undefined)
-          .then((value: unknown) => {
-            if (!response.ok) {
-              const message =
-                value &&
-                typeof value === "object" &&
-                "message" in value &&
-                typeof value.message === "string" &&
-                value.message.length <= 500
-                  ? value.message
-                  : "The setup questionnaire could not be loaded.";
-              throw new Error(message);
-            }
-            return value;
-          });
-      })
-      .then((value) => {
+        const value = await response.json().catch(() => undefined);
+        if (!response.ok) {
+          const message =
+            value &&
+            typeof value === "object" &&
+            "message" in value &&
+            typeof value.message === "string" &&
+            value.message.length <= 500
+              ? value.message
+              : "The setup questionnaire could not be loaded.";
+          throw new Error(message);
+        }
         const dataset = parseHouseEditorDataset(value);
+        let suggestionMap = new Map<string, HowItPlaysSuggestion>();
+        try {
+          const suggestionResponse = await fetch(
+            new URL("setup-suggestions.json", document.baseURI),
+            { signal: globalThis.AbortSignal.timeout(5_000) }
+          );
+          if (!suggestionResponse.ok) throw new Error("Setup suggestions are unavailable.");
+          const payload = parseSetupSuggestions(
+            (await suggestionResponse.json()) as unknown,
+            dataset.sourceSha
+          );
+          suggestionMap = new Map(
+            payload.suggestions.map((suggestion) => [suggestion.slug, suggestion])
+          );
+        } catch {
+          // The questionnaire remains usable when optional suggestions are unavailable.
+        }
+        if (!active) return;
         setSourceSha(dataset.sourceSha);
+        setSuggestions(suggestionMap);
         setSourceGames(dataset.games);
-        void fetch(new URL("setup-suggestions.json", document.baseURI))
-          .then((response) => {
-            if (!response.ok) throw new Error("Setup suggestions are unavailable.");
-            return response.json() as Promise<unknown>;
-          })
-          .then((suggestionValue) => {
-            const payload = parseSetupSuggestions(suggestionValue, dataset.sourceSha);
-            setSuggestions(
-              new Map(payload.suggestions.map((suggestion) => [suggestion.slug, suggestion]))
-            );
-          })
-          .catch(() => setSuggestions(new Map()));
-      })
-      .catch((cause: Error) => setError(cause.message));
+      } catch (cause) {
+        if (active) {
+          setError(
+            cause instanceof Error ? cause.message : "The setup questionnaire could not be loaded."
+          );
+        }
+      }
+    };
+    void load();
+    return () => {
+      active = false;
+    };
   }, [grant, onVerificationLost, serviceUrl]);
 
   useEffect(() => {
@@ -300,6 +314,9 @@ export function HouseEditor({
     );
   const setupNavigatorRef = useRef<globalThis.HTMLElement | null>(null);
   const setupMainRef = useRef<globalThis.HTMLDivElement | null>(null);
+  const gameHeadingRef = useRef<globalThis.HTMLHeadingElement | null>(null);
+  const noticeRef = useRef<globalThis.HTMLParagraphElement | null>(null);
+  const focusHeadingAfterNavigation = useRef(false);
 
   useLayoutEffect(() => {
     const navigator = setupNavigatorRef.current;
@@ -331,21 +348,52 @@ export function HouseEditor({
       }
     }));
     setNotice("");
+    setValidationAttempted(false);
   };
+
+  const showGame = (nextIndex: number, moveFocus = true) => {
+    focusHeadingAfterNavigation.current = moveFocus;
+    setValidationAttempted(false);
+    setNotice("");
+    setIndex(Math.max(0, Math.min(games.length - 1, nextIndex)));
+  };
+
+  useEffect(() => {
+    if (!focusHeadingAfterNavigation.current) return;
+    focusHeadingAfterNavigation.current = false;
+    gameHeadingRef.current?.focus();
+  }, [current?.slug]);
 
   const finishCurrent = () => {
     if (!current) return;
     const errors = validateHouseAnswer(current);
     if (errors.length) {
+      setValidationAttempted(true);
+      setNoticeKind("error");
       setNotice(errors.join(" "));
+      globalThis.requestAnimationFrame(() => {
+        const invalidField =
+          setupMainRef.current?.querySelector<globalThis.HTMLElement>(
+            'select[aria-invalid="true"]'
+          ) ??
+          setupMainRef.current?.querySelector<globalThis.HTMLElement>(
+            '.local-values input[aria-invalid="true"]'
+          ) ??
+          setupMainRef.current?.querySelector<globalThis.HTMLElement>(
+            'fieldset[aria-invalid="true"]'
+          );
+        (invalidField ?? noticeRef.current)?.focus();
+      });
       return;
     }
     setProgress((previous) => ({
       ...previous,
       completedSlugs: [...new Set([...previous.completedSlugs, current.slug])]
     }));
+    setValidationAttempted(false);
+    setNoticeKind("status");
     setNotice(`${current.title} saved.`);
-    if (index < games.length - 1) setIndex(index + 1);
+    if (index < games.length - 1) showGame(index + 1);
   };
 
   const toggleMode = (mode: string) => {
@@ -371,11 +419,13 @@ export function HouseEditor({
         sourceSha
       );
       setSubmission(result);
+      setNoticeKind("status");
     } catch (cause) {
       if (cause instanceof SetupVerificationError) {
         onVerificationLost();
         return;
       }
+      setNoticeKind("error");
       setNotice(cause instanceof Error ? cause.message : "The setup answers could not be saved.");
     } finally {
       setSubmitting(false);
@@ -385,7 +435,7 @@ export function HouseEditor({
   if (error) {
     return (
       <section class="setup-shell">
-        <div class="empty-state">
+        <div class="empty-state" role="alert">
           <span aria-hidden="true">!</span>
           <h2>We couldn’t open game setup</h2>
           <p>{error}</p>
@@ -397,7 +447,9 @@ export function HouseEditor({
   if (!current) {
     return (
       <section class="setup-shell" aria-busy="true">
-        <div class="setup-loading">Preparing the game list…</div>
+        <div class="setup-loading" role="status">
+          Preparing the game list…
+        </div>
       </section>
     );
   }
@@ -415,7 +467,7 @@ export function HouseEditor({
             {completed.size} of {games.length}
           </strong>
           <span>{percent}% complete</span>
-          <progress max={games.length} value={completed.size}>
+          <progress aria-label="Setup completion" max={games.length} value={completed.size}>
             {percent}%
           </progress>
         </div>
@@ -432,7 +484,7 @@ export function HouseEditor({
               {completed.size} of {games.length}
             </strong>
             <span>{percent}% complete</span>
-            <progress max={games.length} value={completed.size}>
+            <progress aria-label="Setup completion" max={games.length} value={completed.size}>
               {percent}%
             </progress>
           </div>
@@ -442,7 +494,7 @@ export function HouseEditor({
                 type="button"
                 class={gameIndex === index ? "is-current" : ""}
                 aria-current={gameIndex === index ? "step" : undefined}
-                onClick={() => setIndex(gameIndex)}
+                onClick={() => showGame(gameIndex)}
                 key={game.slug}
               >
                 <span>{game.title}</span>
@@ -461,7 +513,7 @@ export function HouseEditor({
               Jump to a game
               <select
                 value={index}
-                onChange={(event) => setIndex(Number(event.currentTarget.value))}
+                onChange={(event) => showGame(Number(event.currentTarget.value), false)}
               >
                 {games.map((game, gameIndex) => (
                   <option value={gameIndex} key={game.slug}>
@@ -495,24 +547,27 @@ export function HouseEditor({
           </div>
 
           {completed.size === games.length && (
-            <div class="setup-complete" role="status">
+            <div class="setup-complete">
               {submission ? (
                 <>
-                  <strong>Setup answers are ready for review.</strong>
+                  <strong role="status">Setup answers were sent for review.</strong>
                   <ExternalLink href={submission.pullRequestUrl}>
-                    Open pull request #{submission.pullRequestNumber} on GitHub
+                    View proposed update #{submission.pullRequestNumber} on GitHub
                   </ExternalLink>
                 </>
               ) : (
                 <>
-                  <strong>Every game has a completed answer.</strong>
-                  <span>Save them to a new GitHub branch and pull request for review.</span>
+                  <strong role="status">Every game has a completed answer.</strong>
+                  <span>
+                    Send the answers for review. The public library will not change until the
+                    proposed update is approved.
+                  </span>
                   <button
                     class="primary-button"
                     disabled={submitting}
                     onClick={() => void submit()}
                   >
-                    {submitting ? "Saving to GitHub…" : "Save to GitHub"}
+                    {submitting ? "Sending for review…" : "Send for review"}
                   </button>
                 </>
               )}
@@ -525,7 +580,9 @@ export function HouseEditor({
                 <span class="eyebrow">
                   Game {index + 1} of {games.length}
                 </span>
-                <h2>{current.title}</h2>
+                <h2 ref={gameHeadingRef} tabIndex={-1}>
+                  {current.title}
+                </h2>
               </div>
               {completed.has(current.slug) && <span class="complete-badge">Complete</span>}
             </header>
@@ -552,6 +609,12 @@ export function HouseEditor({
                   Have you learned it?
                   <select
                     value={current.learned}
+                    aria-invalid={validationAttempted && !["yes", "no"].includes(current.learned)}
+                    aria-describedby={
+                      validationAttempted && !["yes", "no"].includes(current.learned)
+                        ? "setup-validation-notice"
+                        : undefined
+                    }
                     onChange={(event) => update("learned", event.currentTarget.value)}
                   >
                     <option value="">Choose one</option>
@@ -638,14 +701,14 @@ export function HouseEditor({
               <div class="setup-fields">
                 {currentSuggestion ? (
                   <aside class="setup-inference-note wide">
-                    <strong>BGG suggestions are preselected.</strong>
+                    <strong>BoardGameGeek suggestions are preselected.</strong>
                     <p>
                       These are cautious inferences from BoardGameGeek category and mechanic labels,
-                      not claims made directly by BGG. Please uncheck anything that does not fit
-                      your copy or group.
+                      not facts supplied directly by BoardGameGeek. Please uncheck anything that
+                      does not fit your copy or group.
                     </p>
                     <details>
-                      <summary>See the BGG signals used</summary>
+                      <summary>See the BoardGameGeek information used</summary>
                       {currentSuggestion.categories.length ? (
                         <span>Categories: {currentSuggestion.categories.join(", ")}</span>
                       ) : null}
@@ -655,16 +718,27 @@ export function HouseEditor({
                       <ExternalLink
                         href={`https://boardgamegeek.com/boardgame/${currentSuggestion.bggId}`}
                       >
-                        Review this game on BGG
+                        Review this game on BoardGameGeek
                       </ExternalLink>
                     </details>
                   </aside>
                 ) : null}
                 {current.localValuesRequired === "yes" ? (
-                  <fieldset class="setup-modes">
+                  <fieldset
+                    class="setup-modes"
+                    aria-invalid={validationAttempted && !selectedTags(current.modes).length}
+                    aria-describedby={
+                      validationAttempted && !selectedTags(current.modes).length
+                        ? "setup-validation-notice"
+                        : undefined
+                    }
+                    tabIndex={
+                      validationAttempted && !selectedTags(current.modes).length ? -1 : undefined
+                    }
+                  >
                     <legend>Supported styles</legend>
                     <p class="setup-mode-help">
-                      This game has no BGG record, so select every style it supports.
+                      This game is not listed on BoardGameGeek, so select every style it supports.
                     </p>
                     {[
                       ["competitive", "Competitive"],
@@ -723,7 +797,10 @@ export function HouseEditor({
               <div class="setup-section local-values">
                 <div>
                   <h3>Basic game details</h3>
-                  <p>This game is not on BGG, so these five answers are needed for filtering.</p>
+                  <p>
+                    This game is not listed on BoardGameGeek, so these five answers are needed for
+                    filtering.
+                  </p>
                 </div>
                 <div class="setup-fields local-grid">
                   {[
@@ -739,6 +816,12 @@ export function HouseEditor({
                         type="number"
                         min="0"
                         inputMode="numeric"
+                        aria-invalid={validationAttempted && !current[key as keyof HouseAnswer]}
+                        aria-describedby={
+                          validationAttempted && !current[key as keyof HouseAnswer]
+                            ? "setup-validation-notice"
+                            : undefined
+                        }
                         value={current[key as keyof HouseAnswer]}
                         onInput={(event) =>
                           update(key as keyof HouseAnswer, event.currentTarget.value)
@@ -754,14 +837,14 @@ export function HouseEditor({
               <button
                 class="secondary-button dark"
                 disabled={index === 0}
-                onClick={() => setIndex(Math.max(0, index - 1))}
+                onClick={() => showGame(index - 1)}
               >
                 Previous
               </button>
               <button
                 class="secondary-button dark"
                 disabled={index === games.length - 1}
-                onClick={() => setIndex(Math.min(games.length - 1, index + 1))}
+                onClick={() => showGame(index + 1)}
               >
                 Skip for now
               </button>
@@ -769,7 +852,13 @@ export function HouseEditor({
                 {index === games.length - 1 ? "Save game" : "Save & next"}
               </button>
             </div>
-            <p class="setup-notice" aria-live="polite">
+            <p
+              class="setup-notice"
+              id="setup-validation-notice"
+              role={noticeKind === "error" ? "alert" : "status"}
+              tabIndex={noticeKind === "error" ? -1 : undefined}
+              ref={noticeRef}
+            >
               {notice}
             </p>
           </article>
