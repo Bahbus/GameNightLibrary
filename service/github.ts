@@ -170,7 +170,7 @@ export class GitHubSetupGateway implements SetupGateway {
       logGitHubFailure("GitHub App could not read the setup source.", error);
       throw new ServiceError(
         503,
-        "GitHub could not open the setup data. Please try again after the App installation is checked.",
+        "GitHub could not open the setup data. Please try again later. If this continues, ask the library owner to check the GitHub connection.",
         "github_inventory_read"
       );
     }
@@ -290,7 +290,7 @@ export class GitHubSetupGateway implements SetupGateway {
       logGitHubFailure("GitHub App installation authentication failed.", error);
       throw new ServiceError(
         503,
-        "GitHub could not open the setup data. Please try again after the App installation is checked.",
+        "GitHub could not open the setup data. Please try again later. If this continues, ask the library owner to check the GitHub connection.",
         "github_installation_auth"
       );
     }

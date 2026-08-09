@@ -27,7 +27,8 @@ const setupSuggestions = await buildSetupSuggestions({
   houseRows,
   houseSource: houseIntakeSource,
   manifest: parseMatchingManifest(matchingSource),
-  token: setupRequired ? token : undefined
+  token: setupRequired ? token : undefined,
+  requireEnrichment: process.env.REQUIRE_BGG_ENRICHMENT === "1"
 });
 await writeSetupSuggestions(
   setupSuggestions,

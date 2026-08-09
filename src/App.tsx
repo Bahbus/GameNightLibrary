@@ -32,6 +32,36 @@ const STORAGE_KEY = "board-game-inventory:preferences:v1";
 const DRAWN_KEY = "board-game-inventory:drawn:v1";
 const REPOSITORY_URL = "https://github.com/Bahbus/BoardGameInventory";
 
+const viewTitles: Record<AppView, string> = {
+  library: "Library | Game Night Library",
+  roulette: "Roulette | Game Night Library",
+  wishlist: "Wish list | Game Night Library",
+  maintain: "Manage | Game Night Library",
+  setup: "Setup | Game Night Library"
+};
+
+const storeLocally = (key: string, value: unknown) => {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    // Filtering and roulette still work when storage is unavailable or full.
+  }
+};
+
+function useMediaQuery(query: string) {
+  const [matches, setMatches] = useState(() => window.matchMedia(query).matches);
+
+  useEffect(() => {
+    const media = window.matchMedia(query);
+    const update = () => setMatches(media.matches);
+    update();
+    media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
+  }, [query]);
+
+  return matches;
+}
+
 const isSetupAuthCallback = () => {
   if (typeof window === "undefined") return false;
   const query = new URLSearchParams(window.location.search);
@@ -461,7 +491,7 @@ function GameCard({
           </button>
           {game.metadata.url && (
             <ExternalLink href={game.metadata.url}>
-              {game.bggId ? "View on BGG" : "View product source"}
+              {game.bggId ? "View on BoardGameGeek" : "View product source"}
             </ExternalLink>
           )}
           <ExternalLink
@@ -487,19 +517,50 @@ function GameCard({
 function GameInspector({ entry, onClose }: { entry: ScoredGame; onClose: () => void }) {
   const { game } = entry;
   const values = effectiveValues(game);
-  const closeButton = useRef<HTMLButtonElement>(null);
+  const closeButton = useRef<globalThis.HTMLButtonElement>(null);
+  const dialog = useRef<globalThis.HTMLDivElement>(null);
+  const overlayMode = useMediaQuery("(max-width: 1719px)");
 
   useEffect(() => {
     closeButton.current?.focus();
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
+    const handleKeys = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        onClose();
+        return;
+      }
+      if (!overlayMode || event.key !== "Tab") return;
+      const focusable = Array.from(
+        dialog.current?.querySelectorAll<globalThis.HTMLElement>(
+          "button:not(:disabled), a[href], input:not(:disabled), select:not(:disabled), textarea:not(:disabled), summary"
+        ) ?? []
+      );
+      const first = focusable[0];
+      const last = focusable.at(-1);
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last?.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first?.focus();
+      }
     };
-    window.addEventListener("keydown", closeOnEscape);
-    return () => window.removeEventListener("keydown", closeOnEscape);
-  }, [game.slug, onClose]);
+    const previousOverflow = document.body.style.overflow;
+    if (overlayMode) document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", handleKeys);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeys);
+    };
+  }, [game.slug, onClose, overlayMode]);
 
   return (
-    <div class="game-inspector" role="dialog" aria-labelledby="game-inspector-title">
+    <div
+      ref={dialog}
+      class="game-inspector"
+      role="dialog"
+      aria-modal={overlayMode ? "true" : undefined}
+      aria-labelledby="game-inspector-title"
+    >
       <div class="game-inspector-heading">
         <span class="eyebrow">Game details</span>
         <button
@@ -540,7 +601,7 @@ function GameInspector({ entry, onClose }: { entry: ScoredGame; onClose: () => v
             <dd>{game.house.rating ? `${game.house.rating} / 5` : "Not rated"}</dd>
           </div>
           <div>
-            <dt>BGG rating</dt>
+            <dt>BoardGameGeek rating</dt>
             <dd>{game.metadata.rating?.toFixed(1) ?? "Unknown"}</dd>
           </div>
         </dl>
@@ -582,7 +643,7 @@ function GameInspector({ entry, onClose }: { entry: ScoredGame; onClose: () => v
         <div class="inspector-links">
           {game.metadata.url && (
             <ExternalLink href={game.metadata.url}>
-              {game.bggId ? "View on BGG" : "View product source"}
+              {game.bggId ? "View on BoardGameGeek" : "View product source"}
             </ExternalLink>
           )}
           <ExternalLink
@@ -738,17 +799,17 @@ const operationCopy = {
   add: {
     label: "Add",
     description: "Add a game or expansion",
-    action: "Continue game details on GitHub"
+    action: "Continue the add request on GitHub"
   },
   update: {
     label: "Update",
     description: "Change shelf, availability, ratings, or details",
-    action: "Choose changes on GitHub"
+    action: "Continue the update request on GitHub"
   },
   remove: {
     label: "Remove",
     description: "Remove an owned item from the public library",
-    action: "Review removal on GitHub"
+    action: "Continue the removal request on GitHub"
   }
 } as const;
 
@@ -813,8 +874,8 @@ function Maintenance({ games }: { games: CatalogGame[] }) {
         <span class="eyebrow">Library management</span>
         <h1>Manage the library</h1>
         <p>
-          Choose one task and identify the game here. GitHub will open a review form for the
-          remaining details. Nothing changes until its pull request is reviewed and merged.
+          Choose a task and identify the game here. You will finish any remaining details on GitHub.
+          A maintainer reviews every proposed update before the public library changes.
         </p>
         <div class="privacy-note">
           <strong>Everything submitted is public.</strong> Use shelf labels, never addresses or
@@ -868,7 +929,7 @@ function Maintenance({ games }: { games: CatalogGame[] }) {
                 />
               </label>
               <label>
-                BGG link or another product page <span class="optional-label">(optional)</span>
+                BoardGameGeek ID or product link <span class="optional-label">(optional)</span>
                 <input
                   value={source}
                   onInput={(event) => setSource(event.currentTarget.value)}
@@ -878,7 +939,7 @@ function Maintenance({ games }: { games: CatalogGame[] }) {
                 />
                 {sourceInvalid && (
                   <small class="field-error" id="game-source-error">
-                    Enter a complete web address or a numeric BGG ID.
+                    Enter a complete web address or a numeric BoardGameGeek ID.
                   </small>
                 )}
               </label>
@@ -965,8 +1026,8 @@ function Maintenance({ games }: { games: CatalogGame[] }) {
           <span class="sr-only"> in a new tab</span>
         </button>
         <p class="form-help">
-          Nothing is submitted until the GitHub form is completed. Maintainer requests can produce a
-          validated pull request, while public requests wait for approval.
+          GitHub will ask you to sign in, review the completed form, and submit it. Nothing changes
+          immediately; a maintainer must approve the request.
         </p>
       </form>
     </section>
@@ -1009,6 +1070,8 @@ function WishlistPanel({ games }: { games: CatalogWishlistGame[] }) {
   useEffect(() => {
     if (!requestOpen) return;
     requestNameInput.current?.focus();
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
     const handleDialogKeys = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         closeRequest();
@@ -1031,7 +1094,10 @@ function WishlistPanel({ games }: { games: CatalogWishlistGame[] }) {
       }
     };
     window.addEventListener("keydown", handleDialogKeys);
-    return () => window.removeEventListener("keydown", handleDialogKeys);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleDialogKeys);
+    };
   }, [closeRequest, requestOpen]);
   const visible = useMemo(() => {
     const normalized = query.trim().toLocaleLowerCase();
@@ -1081,15 +1147,13 @@ function WishlistPanel({ games }: { games: CatalogWishlistGame[] }) {
           Request a game
         </button>
       </div>
+      <p class="sr-only" role="status" aria-live="polite">
+        {visible.length} wish-list {visible.length === 1 ? "game" : "games"} shown.
+      </p>
 
       {requestOpen && (
         <>
-          <button
-            class="inspector-backdrop"
-            type="button"
-            aria-label="Close game request"
-            onClick={closeRequest}
-          />
+          <div class="inspector-backdrop" aria-hidden="true" onClick={closeRequest} />
           <section
             ref={requestDialog}
             class="wishlist-request-dialog"
@@ -1117,8 +1181,8 @@ function WishlistPanel({ games }: { games: CatalogWishlistGame[] }) {
               }}
             >
               <p class="wishlist-request-intro">
-                Tell us what caught your eye. We’ll prefill the public request for you to review and
-                submit on GitHub.
+                Tell us what caught your eye. We’ll fill in a public request, then GitHub will ask
+                you to sign in, review it, and submit it.
               </p>
               <label>
                 Game name
@@ -1131,7 +1195,7 @@ function WishlistPanel({ games }: { games: CatalogWishlistGame[] }) {
                 />
               </label>
               <label>
-                BGG link, BGG ID, or product page <span class="optional-label">(optional)</span>
+                BoardGameGeek ID or product link <span class="optional-label">(optional)</span>
                 <input
                   value={requestSource}
                   aria-invalid={sourceInvalid}
@@ -1142,7 +1206,8 @@ function WishlistPanel({ games }: { games: CatalogWishlistGame[] }) {
               </label>
               {sourceInvalid && (
                 <p class="field-error" id="wishlist-source-error" role="alert">
-                  Enter a BGG ID or a complete web address beginning with http:// or https://.
+                  Enter a BoardGameGeek ID or a complete web address beginning with http:// or
+                  https://.
                 </p>
               )}
               <label>
@@ -1167,7 +1232,7 @@ function WishlistPanel({ games }: { games: CatalogWishlistGame[] }) {
                   Cancel
                 </button>
                 <button class="primary-button" type="submit" disabled={sourceInvalid}>
-                  Review on GitHub <span aria-hidden="true">↗</span>
+                  Continue on GitHub <span aria-hidden="true">↗</span>
                   <span class="sr-only"> in a new tab</span>
                 </button>
               </div>
@@ -1219,7 +1284,7 @@ function WishlistPanel({ games }: { games: CatalogWishlistGame[] }) {
                 {game.notes && <p>{game.notes}</p>}
                 {game.metadata.url && (
                   <ExternalLink href={game.metadata.url}>
-                    {game.bggId ? "View on BGG" : "View source"}
+                    {game.bggId ? "View on BoardGameGeek" : "View source"}
                   </ExternalLink>
                 )}
               </div>
@@ -1285,11 +1350,15 @@ export function App() {
   }, [payload, preferences, setupAuthCallback, view]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(preferences));
+    storeLocally(STORAGE_KEY, preferences);
     if (isSetupAuthCallback()) return;
     window.history.replaceState(null, "", buildAppUrl(window.location.pathname, preferences, view));
     setShareStatus("idle");
   }, [preferences, view]);
+
+  useEffect(() => {
+    document.title = viewTitles[view];
+  }, [view]);
 
   useEffect(() => {
     const restoreUrlState = () => {
@@ -1302,7 +1371,7 @@ export function App() {
 
   const setDrawn = (next: string[]) => {
     setDrawnState(next);
-    localStorage.setItem(DRAWN_KEY, JSON.stringify(next));
+    storeLocally(DRAWN_KEY, next);
   };
 
   const copyShareLink = async () => {
@@ -1360,6 +1429,7 @@ export function App() {
             ] as const
           ).map(([value, label]) => (
             <button
+              type="button"
               class={view === value ? "is-active" : ""}
               aria-current={view === value ? "page" : undefined}
               onClick={() => navigateToView(value)}
@@ -1375,6 +1445,9 @@ export function App() {
       </header>
 
       <main id="main">
+        <p class="sr-only" role="status" aria-live="polite">
+          {viewTitles[view].split(" |")[0]} view loaded.
+        </p>
         {view === "library" && (
           <section class="hero">
             <div class="hero-copy">
@@ -1397,7 +1470,8 @@ export function App() {
 
         {stale && (
           <div class="status-banner" role="status">
-            BGG details are more than 30 days old. Inventory and house notes are still current.
+            BoardGameGeek details are more than 30 days old. Inventory and house notes are still
+            current.
           </div>
         )}
 
@@ -1414,7 +1488,7 @@ export function App() {
                   <div class="library-toolbar">
                     <div>
                       <span class="eyebrow">The shortlist</span>
-                      <h2 id="library-title">
+                      <h2 id="library-title" aria-live="polite" aria-atomic="true">
                         {payload
                           ? `${scored.length} game${scored.length === 1 ? "" : "s"} ready`
                           : "Loading the shelves…"}
@@ -1445,7 +1519,7 @@ export function App() {
                         >
                           <option value="name">Sort: Name</option>
                           <option value="houseRating">House rating</option>
-                          <option value="bggRating">BGG rating</option>
+                          <option value="bggRating">BoardGameGeek rating</option>
                           <option value="complexity">Complexity</option>
                           <option value="duration">Duration</option>
                           <option value="players">Player count</option>
@@ -1467,7 +1541,7 @@ export function App() {
                   </div>
 
                   {error ? (
-                    <div class="empty-state">
+                    <div class="empty-state" role="alert">
                       <span aria-hidden="true">!</span>
                       <h3>We couldn’t open the library</h3>
                       <p>{error}</p>
@@ -1515,12 +1589,7 @@ export function App() {
             </div>
             {inspectedEntry && (
               <>
-                <button
-                  class="inspector-backdrop"
-                  type="button"
-                  aria-label="Close game details"
-                  onClick={closeInspector}
-                />
+                <div class="inspector-backdrop" aria-hidden="true" onClick={closeInspector} />
                 <GameInspector entry={inspectedEntry} onClose={closeInspector} />
               </>
             )}
@@ -1537,10 +1606,10 @@ export function App() {
       <footer>
         <div>
           <strong>Game Night Library</strong>
-          <p>A public, GitHub-backed inventory for finding what fits.</p>
+          <p>A shared game inventory for finding what fits.</p>
         </div>
         <div class="footer-meta">
-          <ExternalLink href="https://boardgamegeek.com">Powered by BGG</ExternalLink>
+          <ExternalLink href="https://boardgamegeek.com">Powered by BoardGameGeek</ExternalLink>
           <span>
             Metadata refreshed {payload ? new Date(payload.refreshedAt).toLocaleDateString() : "—"}
           </span>
