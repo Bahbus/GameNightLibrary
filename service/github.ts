@@ -125,7 +125,7 @@ export class GitHubSetupGateway implements SetupGateway {
       headers: {
         accept: "application/json",
         "content-type": "application/json",
-        "user-agent": "BoardGameInventory-setup-service"
+        "user-agent": "GameNightLibrary-setup-service"
       },
       method: "POST",
       redirect: "error",

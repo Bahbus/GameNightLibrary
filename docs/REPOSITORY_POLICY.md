@@ -22,7 +22,7 @@ this repository. `scripts/configureRepository.sh` applies that contract; the sep
 Authenticate GitHub CLI with access to the repository, install `jq`, then run:
 
 ```sh
-npm run repository:audit -- Bahbus/BoardGameInventory
+npm run repository:audit -- Bahbus/GameNightLibrary
 ```
 
 The audit performs only GitHub API GET requests. It prints one pass or mismatch per policy area,
@@ -38,7 +38,7 @@ when the intended contract has genuinely changed.
 Applying policy mutates repository settings and therefore remains an explicit maintainer action:
 
 ```sh
-npm run repository:configure -- Bahbus/BoardGameInventory
+npm run repository:configure -- Bahbus/GameNightLibrary
 ```
 
 Review `config/repository-policy.json` and the script diff before running it. The command

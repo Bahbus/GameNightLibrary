@@ -35,6 +35,8 @@ export default [
         KeyboardEvent: "readonly",
         btoa: "readonly",
         navigator: "readonly",
+        __GITHUB_REPOSITORY__: "readonly",
+        __GITHUB_REPOSITORY_URL__: "readonly",
         console: "readonly",
         process: "readonly",
         setTimeout: "readonly"

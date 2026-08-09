@@ -8,7 +8,7 @@ describe("setup service tokens", () => {
   it("signs and verifies bounded OAuth state", async () => {
     const tokens = new SetupTokens(setupServiceConfig());
     const input = {
-      callback: "https://bahbus.github.io/BoardGameInventory/",
+      callback: "https://bahbus.github.io/GameNightLibrary/",
       codeChallenge: sha256Base64Url("v".repeat(64)),
       nonceHash: sha256Base64Url("n".repeat(64))
     };

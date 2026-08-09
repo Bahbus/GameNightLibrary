@@ -11,11 +11,11 @@ describe("application navigation", () => {
 
   it("preserves filter settings in view links", () => {
     const preferences = { ...DEFAULT_PREFERENCES, players: 6 };
-    expect(buildAppUrl("/BoardGameInventory/", preferences, "roulette")).toBe(
-      "/BoardGameInventory/?v=1&players=6&view=roulette"
+    expect(buildAppUrl("/GameNightLibrary/", preferences, "roulette")).toBe(
+      "/GameNightLibrary/?v=1&players=6&view=roulette"
     );
-    expect(buildAppUrl("/BoardGameInventory/", preferences, "library")).toBe(
-      "/BoardGameInventory/?v=1&players=6"
+    expect(buildAppUrl("/GameNightLibrary/", preferences, "library")).toBe(
+      "/GameNightLibrary/?v=1&players=6"
     );
   });
 });

@@ -39,16 +39,14 @@ describe("GitHub setup gateway", () => {
     const gateway = new GitHubSetupGateway(setupServiceConfig());
     const url = new URL(
       gateway.authorizationUrl({
-        callback: "https://bahbus.github.io/BoardGameInventory/",
+        callback: "https://bahbus.github.io/GameNightLibrary/",
         codeChallenge: "challenge",
         state: "signed-state"
       })
     );
     expect(url.origin).toBe("https://github.com");
     expect(url.searchParams.get("client_id")).toBe("Iv1.test");
-    expect(url.searchParams.get("redirect_uri")).toBe(
-      "https://bahbus.github.io/BoardGameInventory/"
-    );
+    expect(url.searchParams.get("redirect_uri")).toBe("https://bahbus.github.io/GameNightLibrary/");
     expect(url.searchParams.get("code_challenge_method")).toBe("S256");
   });
 
@@ -72,7 +70,7 @@ describe("GitHub setup gateway", () => {
 
     await expect(
       gateway.exchangeAndVerifyUser({
-        callback: "https://bahbus.github.io/BoardGameInventory/",
+        callback: "https://bahbus.github.io/GameNightLibrary/",
         code: "code",
         codeVerifier: "verifier"
       })
@@ -87,7 +85,7 @@ describe("GitHub setup gateway", () => {
     });
     await expect(
       gateway.exchangeAndVerifyUser({
-        callback: "https://bahbus.github.io/BoardGameInventory/",
+        callback: "https://bahbus.github.io/GameNightLibrary/",
         code: "code",
         codeVerifier: "verifier"
       })
@@ -115,7 +113,7 @@ describe("GitHub setup gateway", () => {
     const createPull = vi.fn(async () => ({
       data: {
         number: 42,
-        html_url: "https://github.com/Bahbus/BoardGameInventory/pull/42"
+        html_url: "https://github.com/Bahbus/GameNightLibrary/pull/42"
       }
     }));
     const installation = {
@@ -137,7 +135,7 @@ describe("GitHub setup gateway", () => {
       })
     ).resolves.toEqual({
       pullRequestNumber: 42,
-      pullRequestUrl: "https://github.com/Bahbus/BoardGameInventory/pull/42"
+      pullRequestUrl: "https://github.com/Bahbus/GameNightLibrary/pull/42"
     });
     expect(createRef).toHaveBeenCalledWith(
       expect.objectContaining({ ref: "refs/heads/inventory/house-setup" })

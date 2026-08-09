@@ -23,7 +23,7 @@ async function cacheThumbnail(
     if (sourceUrl.protocol !== "https:") throw new Error("cover URL is not HTTPS");
 
     const response = await fetcher(sourceUrl, {
-      headers: { "User-Agent": "Bahbus-BoardGameInventory/1.0" }
+      headers: { "User-Agent": "Bahbus-GameNightLibrary/1.0" }
     });
     if (!response.ok) throw new Error(`cover returned ${response.status}`);
 

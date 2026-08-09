@@ -2,6 +2,10 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 import { catalogFixture } from "../fixtures/catalog";
 
+const activeRepository = process.env.GITHUB_REPOSITORY ?? "Bahbus/GameNightLibrary";
+const activeRepositoryName = activeRepository.split("/").at(-1)!;
+const activeRepositoryUrl = `https://github.com/${activeRepository}`;
+
 const setupSession = {
   grant: "test-only-opaque-grant",
   login: "Bahbus",
@@ -583,9 +587,9 @@ test("labels external destinations and opens them safely", async ({ page }) => {
 });
 
 test("supports the GitHub Pages repository path", async ({ page }) => {
-  await page.goto("/BoardGameInventory/");
+  await page.goto(`/${activeRepositoryName}/`);
   await expect(page.getByRole("heading", { name: "3 games ready" })).toBeVisible();
-  await expect(page).toHaveURL(/\/BoardGameInventory\/\?v=1/);
+  await expect(page).toHaveURL(new RegExp(`/${activeRepositoryName}/\\?v=1`));
 });
 
 test("offers useful recovery when no game meets the requirements", async ({ page }) => {
@@ -746,7 +750,7 @@ test("guides house answers one game at a time and keeps progress locally", async
       status: 201,
       body: JSON.stringify({
         pullRequestNumber: 42,
-        pullRequestUrl: "https://github.com/Bahbus/BoardGameInventory/pull/42"
+        pullRequestUrl: `${activeRepositoryUrl}/pull/42`
       })
     })
   );
@@ -878,7 +882,7 @@ test("guides house answers one game at a time and keeps progress locally", async
   await page.getByRole("button", { name: "Send for review" }).click();
   await expect(
     page.getByRole("link", { name: "View proposed update #42 on GitHub" })
-  ).toHaveAttribute("href", "https://github.com/Bahbus/BoardGameInventory/pull/42");
+  ).toHaveAttribute("href", `${activeRepositoryUrl}/pull/42`);
 
   const downloadPromise = page.waitForEvent("download");
   await page.getByRole("button", { name: "Download CSV copy" }).click();

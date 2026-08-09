@@ -1,7 +1,14 @@
 import { posix } from "node:path";
+import {
+  parseGitHubRepository,
+  repositoryUrl,
+  TARGET_REPOSITORY
+} from "../src/lib/projectIdentity";
 
-export const wikiRepositoryUrl = "https://github.com/Bahbus/BoardGameInventory/wiki";
-const sourceRepositoryUrl = "https://github.com/Bahbus/BoardGameInventory";
+export const wikiSourceRepository =
+  parseGitHubRepository(process.env.GITHUB_REPOSITORY)?.fullName ?? TARGET_REPOSITORY;
+const sourceRepositoryUrl = repositoryUrl(wikiSourceRepository);
+export const wikiRepositoryUrl = `${sourceRepositoryUrl}/wiki`;
 
 export interface WikiPageSource {
   source: string;

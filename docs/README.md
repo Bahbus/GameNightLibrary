@@ -4,7 +4,7 @@ These guides keep operational detail out of the project landing page while prese
 the code it describes. These repository files are the source of truth: changes are reviewed in pull
 requests, validated by the test suite, and versioned with application changes. After a change reaches
 `main`, GitHub Actions publishes the same guides to the
-[reader-friendly Wiki](https://github.com/Bahbus/BoardGameInventory/wiki).
+[reader-friendly Wiki](https://github.com/Bahbus/GameNightLibrary/wiki).
 
 ## Choose a guide
 

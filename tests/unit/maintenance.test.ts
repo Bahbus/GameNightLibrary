@@ -30,7 +30,7 @@ describe("maintenance input helpers", () => {
 
 describe("maintenance request links", () => {
   it("prefills the matching GitHub issue form without empty values", () => {
-    const url = buildIssueUrl("https://github.com/Bahbus/BoardGameInventory", {
+    const url = buildIssueUrl("https://github.com/Bahbus/GameNightLibrary", {
       operation: "add",
       bggId: "68448",
       sourceUrl: "",
@@ -47,7 +47,7 @@ describe("maintenance request links", () => {
   });
 
   it("prefills a slug and source without inventing a BGG ID", () => {
-    const url = buildIssueUrl("https://github.com/Bahbus/BoardGameInventory", {
+    const url = buildIssueUrl("https://github.com/Bahbus/GameNightLibrary", {
       operation: "add",
       bggId: "",
       sourceUrl: "https://publisher.example/local-game",
@@ -65,7 +65,7 @@ describe("maintenance request links", () => {
 
 describe("wishlist request links", () => {
   it("opens the game-request issue form with only supplied fields", () => {
-    const url = buildWishlistIssueUrl("https://github.com/Bahbus/BoardGameInventory", {
+    const url = buildWishlistIssueUrl("https://github.com/Bahbus/GameNightLibrary", {
       bggId: "",
       sourceUrl: "",
       name: "Sky Team",

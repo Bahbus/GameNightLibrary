@@ -74,7 +74,7 @@ const deploy = spawnSync(
     "--site",
     siteId,
     "--message",
-    `BoardGameInventory ${revision.slice(0, 12)}`,
+    `GameNightLibrary ${revision.slice(0, 12)}`,
     "--json"
   ],
   {

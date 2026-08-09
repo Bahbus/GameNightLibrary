@@ -231,9 +231,10 @@ export const submitHouseAnswers = async (
     throw new Error("GitHub returned an invalid pull request response.");
   }
   const url = new URL(value.pullRequestUrl);
+  const expectedRepositoryPath = new URL(__GITHUB_REPOSITORY_URL__).pathname.replace(/\/$/, "");
   if (
     url.origin !== "https://github.com" ||
-    url.pathname !== `/Bahbus/BoardGameInventory/pull/${value.pullRequestNumber}`
+    url.pathname !== `${expectedRepositoryPath}/pull/${value.pullRequestNumber}`
   ) {
     throw new Error("GitHub returned an unexpected pull request URL.");
   }
