@@ -10,6 +10,7 @@ import type {
   Wishlist
 } from "../src/types";
 import { fetchBggMetadata } from "./bgg";
+import { cacheCatalogThumbnails } from "./thumbnailCache";
 
 const fallbackMetadata = (
   bggId: number | undefined,
@@ -121,8 +122,16 @@ export async function generateCatalog(options: {
   requireEnrichment?: boolean;
   fetcher?: typeof fetch;
   now?: () => Date;
+  thumbnailCacheDirectory?: URL;
 }): Promise<CatalogPayload> {
-  const payload = await buildCatalogPayload(options);
+  let payload = await buildCatalogPayload(options);
+  if (options.thumbnailCacheDirectory) {
+    payload = await cacheCatalogThumbnails(
+      payload,
+      options.thumbnailCacheDirectory,
+      options.fetcher
+    );
+  }
   await writeCatalogPayload(payload, options.output);
   return payload;
 }

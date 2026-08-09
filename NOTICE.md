@@ -6,7 +6,8 @@ materials.
 
 BoardGameGeek metadata is retrieved during trusted builds, displayed without intentionally
 altering its meaning, credited to BoardGameGeek, and governed by BoardGameGeek's XML API terms
-and general terms of service.
+and general terms of service. The official “Powered by BGG” logo in `public/powered-by-bgg-rgb.svg`
+is BoardGameGeek property and is not licensed under this project's MIT License.
 
 The public inventory is authored project data. Contributors should submit only information
 they are entitled to publish.

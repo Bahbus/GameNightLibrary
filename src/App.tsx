@@ -405,7 +405,7 @@ function FilterPanel({
 
 function Cover({ game }: { game: CatalogGame }) {
   const [failed, setFailed] = useState(false);
-  const image = game.metadata.thumbnail || game.metadata.image;
+  const image = game.metadata.cachedThumbnail;
   if (!image || failed) {
     return (
       <div class="cover-fallback" aria-hidden="true">
@@ -1260,9 +1260,9 @@ function WishlistPanel({ games }: { games: CatalogWishlistGame[] }) {
           {visible.map((game) => (
             <article class="wishlist-card" key={game.slug}>
               <div class="wishlist-cover">
-                {game.metadata.thumbnail ? (
+                {game.metadata.cachedThumbnail ? (
                   <img
-                    src={game.metadata.thumbnail}
+                    src={game.metadata.cachedThumbnail}
                     alt=""
                     loading="lazy"
                     onError={(event) => {
@@ -1271,7 +1271,7 @@ function WishlistPanel({ games }: { games: CatalogWishlistGame[] }) {
                     }}
                   />
                 ) : null}
-                <div class="cover-fallback" hidden={Boolean(game.metadata.thumbnail)}>
+                <div class="cover-fallback" hidden={Boolean(game.metadata.cachedThumbnail)}>
                   <span aria-hidden="true">◇</span>
                 </div>
               </div>
@@ -1609,9 +1609,21 @@ export function App() {
           <p>A shared game inventory for finding what fits.</p>
         </div>
         <div class="footer-meta">
-          <ExternalLink href="https://boardgamegeek.com">Powered by BoardGameGeek</ExternalLink>
+          <a
+            class="bgg-attribution"
+            href="https://boardgamegeek.com"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <img src={`${import.meta.env.BASE_URL}powered-by-bgg-rgb.svg`} alt="Powered by BGG" />
+            <span class="sr-only"> (opens in a new tab)</span>
+          </a>
           <span>
             Metadata refreshed {payload ? new Date(payload.refreshedAt).toLocaleDateString() : "—"}
+          </span>
+          <span class="footer-methodology">
+            Play styles and match scores are Game Night Library inferences, not BoardGameGeek
+            ratings or recommendations.
           </span>
         </div>
       </footer>

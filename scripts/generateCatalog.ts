@@ -20,6 +20,7 @@ const payload = await generateCatalog({
   wishlist,
   setupRequired,
   output,
+  thumbnailCacheDirectory: new URL("../public/bgg-covers/", import.meta.url),
   token,
   requireEnrichment: process.env.REQUIRE_BGG_ENRICHMENT === "1"
 });

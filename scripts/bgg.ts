@@ -162,6 +162,9 @@ export function parseBggThings(xml: string): BggMetadata[] {
 
 const delay = (milliseconds: number) => new Promise((resolve) => setTimeout(resolve, milliseconds));
 
+export const BGG_REQUEST_INTERVAL_MS = 5_000;
+const BGG_MAX_RETRY_DELAY_MS = 30_000;
+
 export async function fetchBggMetadata(
   ids: number[],
   token: string,
@@ -170,6 +173,7 @@ export async function fetchBggMetadata(
 ): Promise<Map<number, BggMetadata>> {
   const result = new Map<number, BggMetadata>();
   for (let offset = 0; offset < ids.length; offset += 20) {
+    if (offset > 0) await wait(BGG_REQUEST_INTERVAL_MS);
     const batch = ids.slice(offset, offset + 20);
     const url = `https://boardgamegeek.com/xmlapi2/thing?id=${batch.join(",")}&stats=1`;
     let response: Response | undefined;
@@ -184,7 +188,9 @@ export async function fetchBggMetadata(
       if (![202, 429, 500, 502, 503, 504].includes(response.status)) {
         throw new Error(`BGG returned ${response.status} for IDs ${batch.join(", ")}`);
       }
-      await wait(500 * 2 ** attempt);
+      if (attempt < 4) {
+        await wait(Math.min(BGG_REQUEST_INTERVAL_MS * 2 ** attempt, BGG_MAX_RETRY_DELAY_MS));
+      }
     }
     if (!response?.ok || response.status === 202) {
       throw new Error(`BGG enrichment failed after retries for IDs ${batch.join(", ")}`);

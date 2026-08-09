@@ -57,6 +57,17 @@ test.beforeEach(async ({ page }) => {
   await page.goto("/");
 });
 
+test("credits BGG with its official linked mark and explains local inferences", async ({
+  page
+}) => {
+  const attribution = page.getByRole("link", { name: /Powered by BGG/ });
+  await expect(attribution).toHaveAttribute("href", "https://boardgamegeek.com");
+  await expect(attribution.locator("img")).toHaveAttribute("src", /powered-by-bgg-rgb\.svg$/);
+  await expect(
+    page.getByText(/Play styles and match scores are Game Night Library inferences/)
+  ).toBeVisible();
+});
+
 test("orders related navigation together and hides completed Setup", async ({ page }) => {
   const navigation = page.getByRole("navigation", { name: "Primary" });
   await expect(navigation.getByRole("button")).toHaveText([
@@ -603,12 +614,12 @@ test("guides an empty collection toward its first addition", async ({ page }) =>
   await expect(page.getByRole("heading", { name: "Manage the library" })).toBeVisible();
 });
 
-test("falls back cleanly when an external cover cannot load", async ({ page }) => {
+test("falls back cleanly when a cached cover cannot load", async ({ page }) => {
   const brokenCover = {
     ...catalogFixture.games[0],
     metadata: {
       ...catalogFixture.games[0].metadata,
-      thumbnail: "https://images.invalid.example/missing-cover.jpg"
+      cachedThumbnail: "missing-cover.jpg"
     }
   };
   await page.unroute("**/catalog.json");
@@ -618,7 +629,7 @@ test("falls back cleanly when an external cover cannot load", async ({ page }) =
       body: JSON.stringify({ ...catalogFixture, games: [brokenCover] })
     })
   );
-  await page.route("https://images.invalid.example/**", (route) => route.abort());
+  await page.route("**/missing-cover.jpg", (route) => route.abort());
   await page.reload();
 
   await expect(page.locator(".cover-fallback").first()).toBeVisible();

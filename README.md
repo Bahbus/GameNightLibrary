@@ -61,8 +61,8 @@ manual review. The manifest also records quantity and whether an expansion is in
 playable; review those authored values before finalization. The pre-token reconciliation identifies
 78 of 81 ownership rows from direct BGG item links. Buzzed Tower remains a local-only game, while
 Unsettled's bundled Wenora and Grakkis planet modules use the publisher's product page and inherit
-the Framework's metadata because BGG does not list them separately. Once the token is available,
-generate a candidate report without modifying the manifest or canonical inventory:
+the Framework's metadata because BGG does not list them separately. Generate a candidate report
+without modifying the manifest or canonical inventory:
 
 ```sh
 BGG_API_TOKEN=... npm run inventory:match
@@ -93,10 +93,10 @@ per selectable game. The second validates that source and creates a local inspec
 service reads the current file from `main`, ties the questionnaire to its Git blob SHA, and
 rejects stale submissions. Setup collects learned state, shelf label, ratings, setup and teaching
 burden, table space, interaction, luck, downtime, moods, accessibility, content, and recommendation
-notes. Competitive, cooperative, team, and solo support normally come from BGG enrichment. A
-non-empty authored mode list is a full house override when BGG needs correcting. Local-only games
-ask for modes as well as player-count, duration, and minimum-age answers so they remain fully
-filterable.
+notes. Game Night Library cautiously infers competitive, cooperative, team, and solo support from
+BGG mechanics and player counts; BGG does not supply those mode labels. A non-empty authored mode
+list is a full house override when an inference needs correcting. Local-only games ask for modes as
+well as player-count, duration, and minimum-age answers so they remain fully filterable.
 
 ### Finalize the canonical inventory
 
@@ -129,9 +129,9 @@ Non-standalone local expansions may inherit base metadata; a local standalone it
 modeled as a selectable base game so Setup can collect complete filter values.
 
 The write is validation-first and atomic: a failure leaves the existing `data/inventory.yaml`
-untouched. Correct the reported row in the matching or house CSV and rerun the check. Do not merge
-the populated canonical inventory until `BGG_API_TOKEN` is available, because trusted production
-deployments intentionally require enrichment for a non-empty BGG-linked collection.
+untouched. Correct the reported row in the matching or house CSV and rerun the check. Trusted
+production deployments require the repository's `BGG_API_TOKEN` Actions secret when the collection
+contains BGG-linked games.
 
 Set the public service URL at build time using `VITE_SETUP_SERVICE_URL`. If it is absent or
 invalid, the site fails closed and explains that verification is unavailable. Never place a
@@ -206,4 +206,8 @@ does not install as a PWA or provide an offline cache.
 ## Attribution
 
 BoardGameGeek data is used under the [BGG XML API terms](https://boardgamegeek.com/wiki/page/XML_API_Terms_of_Use).
-Public builds credit BoardGameGeek and link every enriched game back to its source.
+Public builds display BGG's official linked “Powered by BGG” mark and link every enriched game back
+to its source. Builds retain the original image URLs as source metadata, cache thumbnails into the
+ephemeral Pages artifact, and never ask a visitor's browser to hotlink BGG or GeekDo images. Game
+modes and match scores are Game Night Library inferences; they are labeled accordingly and are not
+presented as BGG ratings or recommendations.
