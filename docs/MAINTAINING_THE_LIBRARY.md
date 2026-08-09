@@ -6,14 +6,15 @@ trail, and the pull-request review boundary.
 
 ## Choose the right path
 
-| Change                          | Recommended path                     |
-| ------------------------------- | ------------------------------------ |
-| Suggest an unowned game         | **Wish list → Request a game**       |
-| Add one owned game              | **Manage → Add a game**              |
-| Correct one owned game          | Open its card, then **Suggest edit** |
-| Remove one owned game           | **Manage → Remove a game**           |
-| Complete house-specific answers | Verified **Setup** questionnaire     |
-| Import or reorganize many items | Reviewed CSV/YAML pull request       |
+| Change                                  | Recommended path                     |
+| --------------------------------------- | ------------------------------------ |
+| Suggest an unowned game                 | **Wish list → Request a game**       |
+| Add one owned game                      | **Manage → Add a game**              |
+| Correct identity, state, or core ranges | Open its card, then **Suggest edit** |
+| Correct detailed house tags or modes    | Direct `inventory.yaml` pull request |
+| Remove one owned game                   | **Manage → Remove a game**           |
+| Complete house-specific answers         | Verified **Setup** questionnaire     |
+| Import or reorganize many items         | Reviewed CSV/YAML pull request       |
 
 Visitors do not need repository knowledge to prepare a request. GitHub authentication is required
 only when the final public issue is submitted or collaborator access is verified.
@@ -65,7 +66,9 @@ metadata. The UI shows both BGG and house values and identifies which one contro
 
 Nest expansions beneath their base game even when an expansion can be played independently.
 Standalone-capable expansions produce a labeled selectable play mode. Non-standalone expansions
-modify their base game's capabilities without creating a separate catalog card.
+remain nested ownership and display records; they do not automatically alter the base game's player
+ranges, modes, mechanics, or other eligibility data. Add an explicit override to the base game when
+the owned expansion changes how the combined game should be filtered.
 
 Model modular collections as one base entry with nested owned content when players choose from a
 shared system rather than treating every box as an unrelated game. Keep compatibility or edition
@@ -78,9 +81,13 @@ Unowned games live in `data/wishlist.yaml` with a stable slug, BGG ID or public 
 
 When a wish-list game is purchased:
 
-1. add the owned item to `data/inventory.yaml` with its physical and house state;
-2. remove the matching entry from `data/wishlist.yaml` in the same pull request;
-3. add an incomplete house row when the owner still needs to answer Setup questions.
+1. add the owned item to `data/inventory.yaml` with its physical and house fields, using explicit
+   empty or unknown values where the schema permits them;
+2. remove the matching entry from `data/wishlist.yaml` in the same pull request.
+
+Do not add a new row only to `data/inventory.house.csv`: that file is tied to the initial matching
+manifest, and Setup submissions do not reconcile an extra row into an already-added canonical game.
+Update the new game's house fields directly in YAML as the owner learns more.
 
 Validation rejects a wish-list identity that is already owned. Until the move is merged, the game
 stays out of Library filters and Roulette.
@@ -98,6 +105,11 @@ npm run test:e2e
 
 Generated BGG metadata, cached covers, reports, and build output do not belong in commits. Pull
 requests should contain authored source records and fixtures only.
+
+The card's **Suggest edit** form covers identity, source, shelf and availability state, learned
+state, ratings, setup and teaching burden, player/time/age ranges, and notes. Correct modes, moods,
+table space, interaction, luck, downtime, accessibility flags, or content flags directly in
+`data/inventory.yaml`; those fields are not exposed by the current single-game issue form.
 
 ## Public-data rule
 

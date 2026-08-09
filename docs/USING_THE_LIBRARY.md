@@ -15,8 +15,9 @@ The Library separates constraints from preferences:
   rating.
 
 Start with only the requirements the group truly needs. If the shortlist is too large, open
-**Fine-tune the vibe** and add preferences. Search narrows the visible shortlist without changing
-eligibility or roulette odds.
+**Fine-tune the vibe** and add preferences. Search is also an active filter: it narrows both the
+visible shortlist and Roulette's candidate pool, which can change the normalized odds. Clear the
+search before opening Roulette when the title text should not constrain the draw.
 
 Game modes and match scores are Game Night Library inferences based on BGG metadata and house
 answers; they are not BGG ratings or recommendations. A maintainer can add a house override when an
@@ -36,8 +37,8 @@ game keeps a chance of selection. The result is chosen before the animation star
 After a draw:
 
 - the result explains its strongest matches and any unmet soft preferences;
-- rerolls temporarily exclude prior results;
-- every eligible game appears before the cycle begins again;
+- rerolls temporarily exclude prior results until every currently eligible game has been drawn;
+- after that pool is exhausted, Roulette resumes drawing from the full eligible pool;
 - **Reset session** restores the full eligible pool;
 - reduced-motion visitors receive the result immediately, and anyone can skip the animation.
 

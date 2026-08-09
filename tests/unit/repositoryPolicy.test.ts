@@ -61,4 +61,15 @@ describe("repository governance policy", () => {
     expect(audit).not.toContain("gh label");
     expect(audit).toContain("Repository policy audit passed");
   });
+
+  it("publishes only reviewed documentation to the Wiki with pinned Actions", async () => {
+    const workflow = await readFile(".github/workflows/wiki.yml", "utf8");
+
+    expect(workflow).toContain("ref: main");
+    expect(workflow).toContain("gollum:");
+    expect(workflow).toContain("permissions:\n  contents: write");
+    expect(workflow).toContain("npm run wiki:build");
+    expect(workflow).toContain('git -C "$wiki_directory" rm -r --ignore-unmatch -- .');
+    expect(workflow).not.toMatch(/uses:\s+[^\s@]+@(?![a-f0-9]{40}\b)/);
+  });
 });

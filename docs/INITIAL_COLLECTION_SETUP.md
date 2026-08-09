@@ -90,9 +90,9 @@ Games without a BGG ID must provide:
 - local minimum age;
 - supported modes.
 
-Non-standalone expansions inherit their base game's eligibility context. A local expansion that is
-playable by itself should be modeled as a selectable base game unless it has enough independent
-metadata to create a valid standalone play mode.
+Non-standalone expansions use their base game's eligibility context. A local-only expansion that is
+playable by itself must be modeled as a selectable base game; the matching-to-finalization workflow
+rejects local-only standalone expansion rows.
 
 ## 5. Validate and finalize
 

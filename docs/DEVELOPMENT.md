@@ -60,6 +60,17 @@ CodeQL gates.
 PR tests never depend on the live BGG API. Parsing, queued responses, throttling, retries, missing
 games, and failure preservation use deterministic fixtures.
 
+## Documentation and Wiki publishing
+
+Markdown in this repository is authoritative. `npm run wiki:build` creates an ignored,
+deterministic mirror in `outputs/wiki/`, adds a navigation sidebar and source notices, and rewrites
+cross-guide links for the Wiki. Unit tests validate both the source links and the generated mapping.
+
+After documentation reaches `main`, the Publish Wiki workflow replaces the Wiki contents with that
+reviewed mirror. A `gollum` trigger restores the reviewed version after a direct browser edit, and a
+weekly run catches other drift. GitHub creates the Wiki Git repository only after its first Home
+page exists; initialize that page once before the first workflow run.
+
 ## Generated and authored files
 
 Do not commit:

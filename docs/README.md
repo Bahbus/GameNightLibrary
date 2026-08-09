@@ -1,8 +1,10 @@
 # Game Night Library documentation
 
 These guides keep operational detail out of the project landing page while preserving it alongside
-the code it describes. Repository-native documentation is reviewed in pull requests, validated by
-the test suite, and versioned with application changes.
+the code it describes. These repository files are the source of truth: changes are reviewed in pull
+requests, validated by the test suite, and versioned with application changes. After a change reaches
+`main`, GitHub Actions publishes the same guides to the
+[reader-friendly Wiki](https://github.com/Bahbus/BoardGameInventory/wiki).
 
 ## Choose a guide
 
@@ -36,3 +38,7 @@ build directories are intentionally ignored.
 Update the guide that owns a workflow whenever behavior changes. Keep README.md focused on product
 orientation and links. Relative Markdown links and image targets are checked by the unit suite so a
 renamed guide cannot silently leave broken navigation.
+
+Do not maintain a second copy in the Wiki editor. The Wiki is a generated navigation and reading
+layer; direct edits are replaced from `main`. Run `npm run wiki:build` to inspect the ignored
+`outputs/wiki/` mirror locally.

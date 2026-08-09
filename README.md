@@ -5,7 +5,8 @@ count, time, play style, accessibility needs, and house preferences—or let the
 make the final choice.
 
 [Open the library](https://bahbus.github.io/BoardGameInventory/) ·
-[Read the documentation](docs/README.md) ·
+[Browse the Wiki](https://github.com/Bahbus/BoardGameInventory/wiki) ·
+[Documentation source](docs/README.md) ·
 [Contribute](CONTRIBUTING.md)
 
 ![Game Night Library showing group filters and a matched shortlist](docs/images/library-overview.jpg)
