@@ -27,29 +27,18 @@ the browser; no personal profiles or named-player data are stored.
 
 ## Documentation
 
-| Guide                                                        | Best for                                                          |
-| ------------------------------------------------------------ | ----------------------------------------------------------------- |
-| [Using the library](docs/USING_THE_LIBRARY.md)               | Visitors choosing a game or making a request                      |
-| [Initial collection setup](docs/INITIAL_COLLECTION_SETUP.md) | Owners importing and reviewing a collection                       |
-| [Maintaining the library](docs/MAINTAINING_THE_LIBRARY.md)   | Collaborators adding, editing, removing, or wish-listing games    |
-| [Development](docs/DEVELOPMENT.md)                           | Contributors running and testing the project locally              |
-| [Architecture](docs/ARCHITECTURE.md)                         | Maintainers understanding data flow and trust boundaries          |
-| [Setup service](docs/SETUP_SERVICE.md)                       | Administrators deploying collaborator verification and submission |
-| [Repository policy](docs/REPOSITORY_POLICY.md)               | Administrators auditing GitHub protections and security settings  |
+| Guide                                                                                                  | Best for                                                          |
+| ------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------- |
+| [Using the library](https://github.com/Bahbus/BoardGameInventory/wiki/Using-the-library)               | Visitors choosing a game or making a request                      |
+| [Initial collection setup](https://github.com/Bahbus/BoardGameInventory/wiki/Initial-collection-setup) | Owners importing and reviewing a collection                       |
+| [Maintaining the library](https://github.com/Bahbus/BoardGameInventory/wiki/Maintaining-the-library)   | Collaborators adding, editing, removing, or wish-listing games    |
+| [Development](https://github.com/Bahbus/BoardGameInventory/wiki/Development)                           | Contributors running and testing the project locally              |
+| [Architecture](https://github.com/Bahbus/BoardGameInventory/wiki/Architecture)                         | Maintainers understanding data flow and trust boundaries          |
+| [Setup service](https://github.com/Bahbus/BoardGameInventory/wiki/Setup-service)                       | Administrators deploying collaborator verification and submission |
+| [Repository policy](https://github.com/Bahbus/BoardGameInventory/wiki/Repository-policy)               | Administrators auditing GitHub protections and security settings  |
 
-The [documentation index](docs/README.md) groups these pages by audience and workflow.
-
-## Quick local start
-
-Requires Node.js 24 LTS.
-
-```sh
-npm install
-npm run dev
-```
-
-An empty inventory builds without credentials. See [Development](docs/DEVELOPMENT.md) for
-environment variables, validation commands, generated files, and deployment behavior.
+The [Wiki home](https://github.com/Bahbus/BoardGameInventory/wiki) groups these pages by audience
+and workflow. Their [reviewable Markdown sources](docs/README.md) remain versioned with the code.
 
 ## Data and licensing
 
