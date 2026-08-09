@@ -33,10 +33,10 @@ configuration.
 
 | Path                 | Responsibility                                                                  |
 | -------------------- | ------------------------------------------------------------------------------- |
+| `api/`               | Thin Vercel entry point for the Setup service                                   |
 | `src/`               | Preact interface, filtering, scoring, roulette, Setup, and maintenance UI       |
 | `scripts/`           | Inventory validation/import, BGG enrichment, catalog generation, and operations |
 | `service/`           | Provider-neutral Setup verification and submission service                      |
-| `netlify/functions/` | Thin Netlify adapter around the service                                         |
 | `data/`              | Authored inventory, wish list, matching, and house-answer records               |
 | `public/`            | Stable static assets and generated local catalog inputs                         |
 | `tests/unit/`        | Deterministic schema, scoring, API parsing, service, and governance tests       |
@@ -78,7 +78,7 @@ Do not commit:
 - `public/catalog.json` or `public/setup-suggestions.json`;
 - `public/bgg-covers/`;
 - `dist/`, `build/`, `outputs/`, coverage, Playwright, or Lighthouse output;
-- local `.env` files, Netlify state, or credentials.
+- local `.env` files, Vercel state, or credentials.
 
 The Pages build retains original BGG image URLs as source metadata, downloads thumbnails into its
 ephemeral artifact, and serves only local cover paths to visitors. A failed cover download uses the
@@ -118,7 +118,7 @@ docker compose up --build
 ```
 
 Use `npm run service:deploy` only from a clean, current `main`. It checks the repository, deploys the
-reviewed service through the pinned Netlify CLI, and verifies live health and revision responses.
+reviewed service through the pinned Vercel CLI, and verifies live health and revision responses.
 The full provider configuration and security boundaries live in [Setup service](SETUP_SERVICE.md).
 
 ## Browser and accessibility support

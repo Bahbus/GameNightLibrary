@@ -1,6 +1,6 @@
 import { createHash, randomUUID } from "node:crypto";
 import { jwtVerify, SignJWT } from "jose";
-import type { ServiceConfig } from "./config";
+import type { ServiceConfig } from "./config.js";
 
 const STATE_AUDIENCE = "board-game-inventory:setup-oauth";
 const GRANT_AUDIENCE = "board-game-inventory:setup";

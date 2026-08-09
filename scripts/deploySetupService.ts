@@ -1,12 +1,10 @@
 import { execFileSync, spawnSync } from "node:child_process";
-import { readFile } from "node:fs/promises";
 import { z } from "zod";
 import { createServiceRevision } from "./serviceRevision";
 
-const NETLIFY_CLI_VERSION = "27.0.1";
-const DEFAULT_SERVICE_URL = "https://board-game-inventory-setup.netlify.app/";
-const stateSchema = z.object({ siteId: z.string().uuid() });
-const deploySchema = z.object({ url: z.string().url().optional() }).passthrough();
+const VERCEL_CLI_VERSION = "58.9.0";
+const DEFAULT_SERVICE_URL = "https://game-night-library-setup.vercel.app/";
+const deploySchema = z.object({ url: z.string().url() }).passthrough();
 
 const git = (...arguments_: string[]) =>
   execFileSync("git", arguments_, { encoding: "utf8" }).trim();
@@ -56,25 +54,20 @@ if (revision !== remoteRevision) {
   throw new Error("Local main must exactly match origin/main before deploying the Setup service.");
 }
 
-const { siteId } = stateSchema.parse(
-  JSON.parse(await readFile(".netlify/state.json", "utf8")) as unknown
-);
 run("npm", ["run", "check"]);
 
 const deploy = spawnSync(
   "npx",
   [
     "--yes",
-    `netlify-cli@${NETLIFY_CLI_VERSION}`,
+    `vercel@${VERCEL_CLI_VERSION}`,
     "deploy",
-    "--build",
     "--prod",
-    "--context",
-    "production",
-    "--site",
-    siteId,
-    "--message",
-    `GameNightLibrary ${revision.slice(0, 12)}`,
+    "--yes",
+    "--env",
+    `SETUP_SERVICE_REVISION=${revision}`,
+    "--build-env",
+    `SETUP_SERVICE_REVISION=${revision}`,
     "--json"
   ],
   {
@@ -88,6 +81,8 @@ if (deploy.status !== 0) {
 }
 if (deploy.stderr) process.stdout.write(deploy.stderr);
 const deployment = deploySchema.parse(JSON.parse(deploy.stdout ?? "") as unknown);
-const serviceUrl = new URL(process.env.SETUP_SERVICE_URL ?? deployment.url ?? DEFAULT_SERVICE_URL);
+const serviceUrl = new URL(process.env.SETUP_SERVICE_URL ?? DEFAULT_SERVICE_URL);
 await waitForDeployment(serviceUrl, revision);
-console.log(`Setup service ${revision.slice(0, 12)} is live at ${serviceUrl.href}`);
+console.log(
+  `Setup service ${revision.slice(0, 12)} is live at ${serviceUrl.href} (deployment ${deployment.url})`
+);
