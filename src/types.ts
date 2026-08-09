@@ -111,6 +111,7 @@ export interface BggMetadata {
 export interface CatalogMetadata extends Omit<BggMetadata, "bggId" | "url"> {
   bggId?: number;
   url?: string;
+  cachedThumbnail?: string;
 }
 
 export interface CatalogExpansion extends OwnedExpansion {

@@ -7,6 +7,7 @@ test-results/
 outputs/
 public/catalog.json
 public/setup-suggestions.json
+public/bgg-covers/
 public/house-intake.json
 lighthouse-report.json
 .env

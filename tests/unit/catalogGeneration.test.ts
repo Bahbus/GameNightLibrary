@@ -1,9 +1,11 @@
+import { Buffer } from "node:buffer";
 import { mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { describe, expect, it } from "vitest";
 import { buildCatalogPayload, generateCatalog } from "../../scripts/catalogGeneration";
+import { cacheCatalogThumbnails } from "../../scripts/thumbnailCache";
 import type { Inventory, Wishlist } from "../../src/types";
 
 const inventory: Inventory = {
@@ -116,5 +118,41 @@ describe("catalog generation", () => {
       })
     ).rejects.toThrow(/returned 401/);
     await expect(readFile(output, "utf8")).resolves.toBe('{"known":"good"}\n');
+  });
+
+  it("caches external thumbnails without replacing their source metadata", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "board-game-covers-"));
+    const payload = await buildCatalogPayload({ inventory });
+    payload.games[0].metadata.thumbnail = "https://cf.geekdo-images.com/source.jpg";
+    const bytes = new Uint8Array([1, 2, 3, 4]);
+    const fetcher = async () =>
+      new Response(bytes, { status: 200, headers: { "content-type": "image/jpeg" } });
+
+    const cached = await cacheCatalogThumbnails(
+      payload,
+      pathToFileURL(`${directory}/`),
+      fetcher as typeof fetch
+    );
+
+    expect(cached.games[0].metadata).toMatchObject({
+      thumbnail: "https://cf.geekdo-images.com/source.jpg",
+      cachedThumbnail: "bgg-covers/101.jpg"
+    });
+    await expect(readFile(join(directory, "101.jpg"))).resolves.toEqual(Buffer.from(bytes));
+  });
+
+  it("uses fallback artwork when a thumbnail cannot be cached", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "board-game-covers-"));
+    const payload = await buildCatalogPayload({ inventory });
+    payload.games[0].metadata.thumbnail = "https://cf.geekdo-images.com/source.jpg";
+    const fetcher = async () => new Response("missing", { status: 404 });
+
+    const cached = await cacheCatalogThumbnails(
+      payload,
+      pathToFileURL(`${directory}/`),
+      fetcher as typeof fetch
+    );
+
+    expect(cached.games[0].metadata.cachedThumbnail).toBeUndefined();
   });
 });

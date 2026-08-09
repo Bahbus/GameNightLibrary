@@ -58,7 +58,7 @@ describe("BGG search matching", () => {
       }
     );
     expect(calls).toBe(2);
-    expect(waits).toEqual([500]);
+    expect(waits).toEqual([5000]);
     expect(result[0].bggId).toBe(9209);
   });
 

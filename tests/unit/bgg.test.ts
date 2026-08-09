@@ -122,7 +122,7 @@ describe("BGG enrichment", () => {
 
       expect(result.get(101)?.name).toBe("Forest Council");
       expect(calls).toBe(2);
-      expect(waits).toEqual([500]);
+      expect(waits).toEqual([5000]);
     }
   );
 
@@ -140,7 +140,7 @@ describe("BGG enrichment", () => {
       })
     ).rejects.toThrow(/failed after retries/);
     expect(calls).toBe(5);
-    expect(waits).toEqual([500, 1000, 2000, 4000, 8000]);
+    expect(waits).toEqual([5000, 10000, 20000, 30000]);
   });
 
   it("does not retry permanent API failures", async () => {
@@ -159,6 +159,7 @@ describe("BGG enrichment", () => {
   it("requests at most 20 IDs per BGG batch", async () => {
     const ids = Array.from({ length: 21 }, (_, index) => index + 1);
     const requestedBatches: number[][] = [];
+    const waits: number[] = [];
     const fetcher = async (input: Parameters<typeof fetch>[0]) => {
       const url = new URL(String(input));
       const batch = url.searchParams.get("id")!.split(",").map(Number);
@@ -172,8 +173,16 @@ describe("BGG enrichment", () => {
       return new Response(`<items>${items}</items>`, { status: 200 });
     };
 
-    const result = await fetchBggMetadata(ids, "token", fetcher as typeof fetch, async () => {});
+    const result = await fetchBggMetadata(
+      ids,
+      "token",
+      fetcher as typeof fetch,
+      async (milliseconds) => {
+        waits.push(milliseconds);
+      }
+    );
     expect(requestedBatches.map((batch) => batch.length)).toEqual([20, 1]);
+    expect(waits).toEqual([5000]);
     expect(result.size).toBe(21);
   });
 });

@@ -1,6 +1,7 @@
 import { XMLParser } from "fast-xml-parser";
 import type { MatchingRow } from "./intakeMatching";
 import { recordsToCsv } from "./csv";
+import { BGG_REQUEST_INTERVAL_MS } from "./bgg";
 
 export interface BggSearchCandidate {
   bggId: number;
@@ -102,7 +103,9 @@ export async function fetchBggSearch(
     if (![202, 429, 500, 502, 503, 504].includes(response.status)) {
       throw new Error(`BGG search returned ${response.status} for ${query}.`);
     }
-    await wait(500 * 2 ** attempt);
+    if (attempt < 4) {
+      await wait(Math.min(BGG_REQUEST_INTERVAL_MS * 2 ** attempt, 30_000));
+    }
   }
   if (!response?.ok || response.status === 202) {
     throw new Error(`BGG search failed after retries for ${query}.`);
