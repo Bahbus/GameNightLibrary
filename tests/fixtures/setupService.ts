@@ -1,7 +1,7 @@
 import type { ServiceConfig } from "../../service/config";
 
 export const SETUP_ORIGIN = "https://bahbus.github.io";
-export const SETUP_CALLBACK = "https://bahbus.github.io/BoardGameInventory/";
+export const SETUP_CALLBACK = "https://bahbus.github.io/GameNightLibrary/";
 export const SOURCE_SHA = "a".repeat(40);
 
 export const setupServiceConfig = (overrides: Partial<ServiceConfig> = {}): ServiceConfig => ({
@@ -20,8 +20,8 @@ export const setupServiceConfig = (overrides: Partial<ServiceConfig> = {}): Serv
   grantTtlSeconds: 900,
   oauthStateTtlSeconds: 600,
   owner: "Bahbus",
-  repo: "BoardGameInventory",
-  repository: "Bahbus/BoardGameInventory",
+  repo: "GameNightLibrary",
+  repository: "Bahbus/GameNightLibrary",
   serviceIssuer: "https://setup.example.test/",
   signingSecret: "test-signing-secret-with-at-least-forty-three-characters-123456",
   trustProxyHops: 0,

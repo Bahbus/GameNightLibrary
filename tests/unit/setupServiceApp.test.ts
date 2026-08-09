@@ -31,7 +31,7 @@ const gatewayFixture = () => {
     })),
     submitHouseAnswers: vi.fn(async () => ({
       pullRequestNumber: 42,
-      pullRequestUrl: "https://github.com/Bahbus/BoardGameInventory/pull/42"
+      pullRequestUrl: "https://github.com/Bahbus/GameNightLibrary/pull/42"
     }))
   };
   return { gateway, issuedState: () => issuedState };
@@ -171,9 +171,7 @@ describe("setup verification service", () => {
       .set("Authorization", `Bearer ${auth.body.grant}`)
       .send({ csv: "test-csv", sourceSha: SOURCE_SHA });
     expect(response.status).toBe(201);
-    expect(response.body.pullRequestUrl).toBe(
-      "https://github.com/Bahbus/BoardGameInventory/pull/42"
-    );
+    expect(response.body.pullRequestUrl).toBe("https://github.com/Bahbus/GameNightLibrary/pull/42");
     expect(fixture.gateway.submitHouseAnswers).toHaveBeenCalledWith({
       csv: "test-csv",
       login: "Bahbus",

@@ -6,7 +6,10 @@ import lighthouse from "lighthouse";
 import * as chromeLauncher from "chrome-launcher";
 import { chromium } from "@playwright/test";
 
-const basePath = "/BoardGameInventory/";
+const repository = process.env.GITHUB_REPOSITORY ?? "Bahbus/GameNightLibrary";
+const repositoryName = repository.split("/").at(-1);
+if (!repositoryName) throw new Error("GITHUB_REPOSITORY must include a repository name.");
+const basePath = `/${repositoryName}/`;
 const url = `http://127.0.0.1:4173${basePath}`;
 const build = spawnSync("npm", ["run", "build"], {
   stdio: "inherit",

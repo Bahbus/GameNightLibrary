@@ -36,7 +36,7 @@ const environmentSchema = z.object({
   SETUP_GITHUB_REPOSITORY_ID: positiveInteger,
   SETUP_GRANT_TTL_SECONDS: z.coerce.number().int().min(300).max(3_600).default(900),
   SETUP_OAUTH_STATE_TTL_SECONDS: z.coerce.number().int().min(60).max(900).default(600),
-  SETUP_REPOSITORY: repositoryName.default("Bahbus/BoardGameInventory"),
+  SETUP_REPOSITORY: repositoryName.default("Bahbus/GameNightLibrary"),
   SETUP_SERVICE_ISSUER: httpsUrl,
   SETUP_SIGNING_SECRET: z.string().min(43),
   TRUST_PROXY_HOPS: z.coerce.number().int().min(0).max(2).default(0)

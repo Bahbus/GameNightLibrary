@@ -1,5 +1,12 @@
 import { defineConfig } from "vitest/config";
 import preact from "@preact/preset-vite";
+import {
+  pagesBasePath,
+  pagesProjectUrl,
+  parseGitHubRepository,
+  repositoryUrl,
+  TARGET_REPOSITORY
+} from "./src/lib/projectIdentity.ts";
 
 export const setupServiceOrigin = (value: string | undefined) => {
   if (!value) return undefined;
@@ -15,9 +22,17 @@ export const setupServiceOrigin = (value: string | undefined) => {
 };
 
 const serviceOrigin = setupServiceOrigin(process.env.VITE_SETUP_SERVICE_URL);
+const buildRepository =
+  parseGitHubRepository(process.env.GITHUB_REPOSITORY)?.fullName ?? TARGET_REPOSITORY;
+const buildRepositoryUrl = repositoryUrl(buildRepository);
+const publicUrl = pagesProjectUrl(buildRepository);
 
 export default defineConfig({
-  base: process.env.GITHUB_ACTIONS ? "/BoardGameInventory/" : "/",
+  base: process.env.GITHUB_ACTIONS ? pagesBasePath(buildRepository) : "/",
+  define: {
+    __GITHUB_REPOSITORY__: JSON.stringify(buildRepository),
+    __GITHUB_REPOSITORY_URL__: JSON.stringify(buildRepositoryUrl)
+  },
   plugins: [
     preact(),
     {
@@ -26,7 +41,9 @@ export default defineConfig({
         const connectSource = serviceOrigin
           ? `connect-src 'self' ${serviceOrigin};`
           : "connect-src 'self';";
-        return html.replace("connect-src 'self';", connectSource);
+        return html
+          .replaceAll("__GAME_NIGHT_LIBRARY_PUBLIC_URL__", publicUrl)
+          .replace("connect-src 'self';", connectSource);
       }
     }
   ],

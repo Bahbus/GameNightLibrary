@@ -45,13 +45,13 @@ configuration.
 
 ## Validation commands
 
-| Command                                                 | What it checks                                                                   |
-| ------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| `npm run check`                                         | Formatting, lint, strict TypeScript, unit tests, app build, and service build    |
-| `npm run test:e2e`                                      | Desktop, wide, and phone Chromium behavior and automated accessibility           |
-| `npm run lighthouse`                                    | Representative phone performance, accessibility, best practices, and SEO budgets |
-| `npm run inventory:validate`                            | Canonical ownership schema and relationships                                     |
-| `npm run repository:audit -- Bahbus/BoardGameInventory` | Read-only comparison of live GitHub settings to policy                           |
+| Command                                               | What it checks                                                                   |
+| ----------------------------------------------------- | -------------------------------------------------------------------------------- |
+| `npm run check`                                       | Formatting, lint, strict TypeScript, unit tests, app build, and service build    |
+| `npm run test:e2e`                                    | Desktop, wide, and phone Chromium behavior and automated accessibility           |
+| `npm run lighthouse`                                  | Representative phone performance, accessibility, best practices, and SEO budgets |
+| `npm run inventory:validate`                          | Canonical ownership schema and relationships                                     |
+| `npm run repository:audit -- Bahbus/GameNightLibrary` | Read-only comparison of live GitHub settings to policy                           |
 
 Run the first three before opening a code or UI pull request. Inventory-only changes should also run
 the inventory validator. Pull-request CI repeats the complete check, Chromium, Lighthouse, and
@@ -96,7 +96,7 @@ dispatch. The trusted build:
 1. validates source records;
 2. fetches BGG metadata in conservative batches with bounded backoff;
 3. caches cover thumbnails into the artifact;
-4. builds the Preact application under `/BoardGameInventory/`;
+4. builds the Preact application under the current repository path;
 5. uploads and deploys through the protected `github-pages` environment.
 
 Generated BGG material is not committed. If required enrichment fails, the workflow fails before a

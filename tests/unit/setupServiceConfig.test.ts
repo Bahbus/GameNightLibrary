@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { parseServiceConfig } from "../../service/config";
 
 const environment = {
-  SETUP_ALLOWED_CALLBACKS: "https://bahbus.github.io/BoardGameInventory/",
+  SETUP_ALLOWED_CALLBACKS: "https://bahbus.github.io/GameNightLibrary/",
   SETUP_ALLOWED_ORIGINS: "https://bahbus.github.io",
   SETUP_GITHUB_APP_ID: "1",
   SETUP_GITHUB_CLIENT_ID: "Iv1.test",
@@ -20,7 +20,7 @@ const environment = {
 describe("setup service configuration", () => {
   it("parses exact origins, callbacks, and fixed repository identifiers", () => {
     const config = parseServiceConfig(environment);
-    expect(config.repository).toBe("Bahbus/BoardGameInventory");
+    expect(config.repository).toBe("Bahbus/GameNightLibrary");
     expect(config.allowedOrigins).toEqual(new Set(["https://bahbus.github.io"]));
     expect(config.github.repositoryId).toBe(3);
     expect(config.github.privateKey).toContain("\ntest\n");

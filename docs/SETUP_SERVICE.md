@@ -18,7 +18,7 @@ the service or its data.
 
 ## Security and repository boundaries
 
-Register a dedicated GitHub App and install it only on `Bahbus/BoardGameInventory`.
+Register a dedicated GitHub App and install it only on `Bahbus/GameNightLibrary`.
 
 Repository permissions:
 
@@ -47,18 +47,18 @@ never merges or writes directly to `main`.
 
 Create a GitHub App under the `Bahbus` account with:
 
-- Homepage URL: `https://bahbus.github.io/BoardGameInventory/`
-- Callback URL: `https://bahbus.github.io/BoardGameInventory/`
+- Homepage URL: `https://bahbus.github.io/GameNightLibrary/`
+- Callback URL: `https://bahbus.github.io/GameNightLibrary/`
 - Webhooks: inactive
 - User authorization callback: the exact URL above
 - Repository permissions: Metadata read, Contents read/write, Pull requests read/write
-- Installation scope: only `Bahbus/BoardGameInventory`
+- Installation scope: only `Bahbus/GameNightLibrary`
 
 Record the App ID and Client ID, generate one client secret and one private key, then install the
 App on the repository. The numeric repository ID can be read without exposing a secret:
 
 ```sh
-gh api repos/Bahbus/BoardGameInventory --jq .id
+gh api repos/Bahbus/GameNightLibrary --jq .id
 ```
 
 The installation ID appears in the installation URL after installing the App and can also be
@@ -81,8 +81,8 @@ Production allowlists should remain:
 
 ```dotenv
 SETUP_ALLOWED_ORIGINS=https://bahbus.github.io
-SETUP_ALLOWED_CALLBACKS=https://bahbus.github.io/BoardGameInventory/
-SETUP_REPOSITORY=Bahbus/BoardGameInventory
+SETUP_ALLOWED_CALLBACKS=https://bahbus.github.io/GameNightLibrary/
+SETUP_REPOSITORY=Bahbus/GameNightLibrary
 ```
 
 Never put a GitHub secret, private key, signing secret, or token in a `VITE_` variable. Vite values
@@ -132,7 +132,7 @@ after verifying that the proxy overwrites forwarded headers. Leave it at `0` oth
 ## Deploy on Netlify without a repository integration
 
 Netlify Functions can host the service on the Free plan without installing Netlify's GitHub App.
-This preserves GitHub access through the dedicated, repository-scoped Board Game Inventory Setup
+This preserves GitHub access through the dedicated, repository-scoped Game Night Library Setup
 App only.
 
 1. Create an empty Netlify project, or run `npx netlify-cli@27.0.1 deploy` and select **Create a
@@ -172,7 +172,7 @@ After deploying the service:
 1. Set the repository Actions variable `SETUP_SERVICE_URL` to the public HTTPS service URL,
    including a trailing slash.
 2. Confirm the GitHub App callback remains exactly
-   `https://bahbus.github.io/BoardGameInventory/`.
+   `https://bahbus.github.io/GameNightLibrary/`.
 3. Manually dispatch the Pages deployment.
 4. Verify that an unauthenticated visitor sees only the locked Setup screen.
 5. Verify that a non-collaborator receives the rejection screen.

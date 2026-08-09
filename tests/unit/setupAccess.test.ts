@@ -10,6 +10,8 @@ import {
 } from "../../src/lib/setupAccess";
 
 describe("setup collaborator access", () => {
+  const repositoryUrl = __GITHUB_REPOSITORY_URL__;
+
   it("accepts HTTPS services and local development HTTP only", () => {
     expect(parseSetupServiceUrl("https://auth.example.test/api")?.href).toBe(
       "https://auth.example.test/api/"
@@ -99,7 +101,7 @@ describe("setup collaborator access", () => {
     const location = {
       assigned: "",
       origin: "https://bahbus.github.io",
-      pathname: "/BoardGameInventory/",
+      pathname: "/GameNightLibrary/",
       assign(value: string) {
         this.assigned = value;
       }
@@ -111,9 +113,7 @@ describe("setup collaborator access", () => {
     });
     const target = new URL(location.assigned);
     expect(target.origin).toBe("https://auth.example.test");
-    expect(target.searchParams.get("callback")).toBe(
-      "https://bahbus.github.io/BoardGameInventory/"
-    );
+    expect(target.searchParams.get("callback")).toBe("https://bahbus.github.io/GameNightLibrary/");
     expect(target.searchParams.get("code_challenge")).toMatch(/^[A-Za-z0-9_-]{43}$/);
     expect(target.searchParams.get("nonce_hash")).toMatch(/^[A-Za-z0-9_-]{43}$/);
     expect([...values.values()]).toHaveLength(2);
@@ -125,7 +125,7 @@ describe("setup collaborator access", () => {
       new Response(
         JSON.stringify({
           pullRequestNumber: 42,
-          pullRequestUrl: "https://github.com/Bahbus/BoardGameInventory/pull/42"
+          pullRequestUrl: `${repositoryUrl}/pull/42`
         }),
         { status: 201 }
       )
@@ -140,7 +140,7 @@ describe("setup collaborator access", () => {
       )
     ).resolves.toEqual({
       pullRequestNumber: 42,
-      pullRequestUrl: "https://github.com/Bahbus/BoardGameInventory/pull/42"
+      pullRequestUrl: `${repositoryUrl}/pull/42`
     });
 
     fetcher.mockResolvedValueOnce(

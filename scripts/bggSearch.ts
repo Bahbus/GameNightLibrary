@@ -96,7 +96,7 @@ export async function fetchBggSearch(
     response = await fetcher(url, {
       headers: {
         Authorization: `Bearer ${token}`,
-        "User-Agent": "Bahbus-BoardGameInventory/1.0"
+        "User-Agent": "Bahbus-GameNightLibrary/1.0"
       }
     });
     if (response.ok && response.status !== 202) break;

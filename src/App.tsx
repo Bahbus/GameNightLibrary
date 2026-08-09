@@ -30,7 +30,7 @@ import type {
 
 const STORAGE_KEY = "board-game-inventory:preferences:v1";
 const DRAWN_KEY = "board-game-inventory:drawn:v1";
-const REPOSITORY_URL = "https://github.com/Bahbus/BoardGameInventory";
+const REPOSITORY_URL = __GITHUB_REPOSITORY_URL__;
 
 const viewTitles: Record<AppView, string> = {
   library: "Library | Game Night Library",

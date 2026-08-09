@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-repository="${1:-Bahbus/BoardGameInventory}"
+repository="${1:-Bahbus/GameNightLibrary}"
 script_directory="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 policy_file="$script_directory/../config/repository-policy.json"
 

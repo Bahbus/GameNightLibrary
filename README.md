@@ -4,8 +4,8 @@ A public, phone-friendly board game inventory for finding what fits the group. F
 count, time, play style, accessibility needs, and house preferences—or let the weighted roulette
 make the final choice.
 
-[Open the library](https://bahbus.github.io/BoardGameInventory/) ·
-[Browse the Wiki](https://github.com/Bahbus/BoardGameInventory/wiki) ·
+[Open the library](https://bahbus.github.io/GameNightLibrary/) ·
+[Browse the Wiki](https://github.com/Bahbus/GameNightLibrary/wiki) ·
 [Documentation source](docs/README.md) ·
 [Contribute](CONTRIBUTING.md)
 
@@ -27,17 +27,17 @@ the browser; no personal profiles or named-player data are stored.
 
 ## Documentation
 
-| Guide                                                                                                  | Best for                                                          |
-| ------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------- |
-| [Using the library](https://github.com/Bahbus/BoardGameInventory/wiki/Using-the-library)               | Visitors choosing a game or making a request                      |
-| [Initial collection setup](https://github.com/Bahbus/BoardGameInventory/wiki/Initial-collection-setup) | Owners importing and reviewing a collection                       |
-| [Maintaining the library](https://github.com/Bahbus/BoardGameInventory/wiki/Maintaining-the-library)   | Collaborators adding, editing, removing, or wish-listing games    |
-| [Development](https://github.com/Bahbus/BoardGameInventory/wiki/Development)                           | Contributors running and testing the project locally              |
-| [Architecture](https://github.com/Bahbus/BoardGameInventory/wiki/Architecture)                         | Maintainers understanding data flow and trust boundaries          |
-| [Setup service](https://github.com/Bahbus/BoardGameInventory/wiki/Setup-service)                       | Administrators deploying collaborator verification and submission |
-| [Repository policy](https://github.com/Bahbus/BoardGameInventory/wiki/Repository-policy)               | Administrators auditing GitHub protections and security settings  |
+| Guide                                                                                                | Best for                                                          |
+| ---------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| [Using the library](https://github.com/Bahbus/GameNightLibrary/wiki/Using-the-library)               | Visitors choosing a game or making a request                      |
+| [Initial collection setup](https://github.com/Bahbus/GameNightLibrary/wiki/Initial-collection-setup) | Owners importing and reviewing a collection                       |
+| [Maintaining the library](https://github.com/Bahbus/GameNightLibrary/wiki/Maintaining-the-library)   | Collaborators adding, editing, removing, or wish-listing games    |
+| [Development](https://github.com/Bahbus/GameNightLibrary/wiki/Development)                           | Contributors running and testing the project locally              |
+| [Architecture](https://github.com/Bahbus/GameNightLibrary/wiki/Architecture)                         | Maintainers understanding data flow and trust boundaries          |
+| [Setup service](https://github.com/Bahbus/GameNightLibrary/wiki/Setup-service)                       | Administrators deploying collaborator verification and submission |
+| [Repository policy](https://github.com/Bahbus/GameNightLibrary/wiki/Repository-policy)               | Administrators auditing GitHub protections and security settings  |
 
-The [Wiki home](https://github.com/Bahbus/BoardGameInventory/wiki) groups these pages by audience
+The [Wiki home](https://github.com/Bahbus/GameNightLibrary/wiki) groups these pages by audience
 and workflow. Their [reviewable Markdown sources](docs/README.md) remain versioned with the code.
 
 ## Data and licensing
