@@ -26,6 +26,7 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "lighthouse": "node scripts/runLighthouse.mjs",
+    "wiki:build": "node --import tsx scripts/generateWiki.ts",
     "check": "npm run format:check && npm run lint && npm run typecheck && npm test && npm run build && npm run service:build",
     "inventory:validate": "node --import tsx scripts/validateInventory.ts",
     "inventory:import": "node --import tsx scripts/importCsv.ts",

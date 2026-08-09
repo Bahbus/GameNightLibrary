@@ -1,5 +1,12 @@
 # Contributing
 
+Start with [Maintaining the library](docs/MAINTAINING_THE_LIBRARY.md) for inventory workflows or
+[Development](docs/DEVELOPMENT.md) for local setup, validation, generated-file boundaries, and
+architecture links.
+
+Documentation is edited in this repository and reviewed like code. The public Wiki is generated
+from these files, so direct Wiki edits will be replaced automatically.
+
 ## Inventory requests
 
 Use the Maintain screen in the site or one of the repository's inventory issue forms.

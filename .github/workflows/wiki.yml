@@ -1,0 +1,70 @@
+name: Publish Wiki
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/wiki.yml"
+      - "CONTRIBUTING.md"
+      - "NOTICE.md"
+      - "SECURITY.md"
+      - "docs/**"
+      - "package.json"
+      - "package-lock.json"
+      - "scripts/generateWiki.ts"
+      - "scripts/wikiGeneration.ts"
+  gollum:
+  schedule:
+    - cron: "41 9 * * 2"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: wiki-publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: publish reviewed documentation
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out authoritative documentation
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Build Wiki pages
+        run: npm run wiki:build
+      - name: Publish Wiki mirror
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          wiki_directory="$RUNNER_TEMP/wiki"
+          gh auth setup-git
+          if ! git clone "https://github.com/$REPOSITORY.wiki.git" "$wiki_directory"; then
+            echo "::error::Initialize the repository Wiki with one Home page, then rerun this workflow. GitHub does not create the Wiki Git repository until its first page exists."
+            exit 1
+          fi
+
+          git -C "$wiki_directory" rm -r --ignore-unmatch -- .
+          cp -R outputs/wiki/. "$wiki_directory/"
+          git -C "$wiki_directory" add -A
+          if git -C "$wiki_directory" diff --cached --quiet; then
+            echo "Wiki already matches the reviewed documentation on main."
+            exit 0
+          fi
+
+          git -C "$wiki_directory" config user.name "github-actions[bot]"
+          git -C "$wiki_directory" config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git -C "$wiki_directory" commit -m "Sync documentation from $GITHUB_SHA"
+          git -C "$wiki_directory" push origin HEAD
