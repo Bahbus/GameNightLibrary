@@ -12,7 +12,6 @@ public/house-intake.json
 lighthouse-report.json
 .env
 .env.service
-.netlify/
 .vercel/
 .env.local
 .DS_Store

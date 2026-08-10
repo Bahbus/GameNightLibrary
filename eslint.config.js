@@ -9,7 +9,6 @@ export default [
       "build",
       "dist",
       "coverage",
-      ".netlify",
       "playwright-report",
       "test-results",
       "public/catalog.json"
