@@ -3,6 +3,9 @@ name: Deploy GitHub Pages
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - "**/*.md"
+      - LICENSE
   schedule:
     - cron: "17 10 * * 3"
   workflow_dispatch:
