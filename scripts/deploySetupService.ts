@@ -4,7 +4,9 @@ import { createServiceRevision } from "./serviceRevision";
 
 const VERCEL_CLI_VERSION = "58.9.0";
 const DEFAULT_SERVICE_URL = "https://game-night-library-setup.vercel.app/";
-const deploySchema = z.object({ url: z.string().url() }).passthrough();
+const deploySchema = z
+  .object({ deployment: z.object({ url: z.string().url() }).passthrough() })
+  .passthrough();
 
 const git = (...arguments_: string[]) =>
   execFileSync("git", arguments_, { encoding: "utf8" }).trim();
@@ -84,5 +86,5 @@ const deployment = deploySchema.parse(JSON.parse(deploy.stdout ?? "") as unknown
 const serviceUrl = new URL(process.env.SETUP_SERVICE_URL ?? DEFAULT_SERVICE_URL);
 await waitForDeployment(serviceUrl, revision);
 console.log(
-  `Setup service ${revision.slice(0, 12)} is live at ${serviceUrl.href} (deployment ${deployment.url})`
+  `Setup service ${revision.slice(0, 12)} is live at ${serviceUrl.href} (deployment ${deployment.deployment.url})`
 );
