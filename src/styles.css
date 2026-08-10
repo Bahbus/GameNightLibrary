@@ -1832,7 +1832,6 @@ footer p {
   flex-direction: column;
   align-items: flex-end;
   gap: 0.3rem;
-  max-width: 34rem;
   text-align: right;
 }
 
@@ -1847,7 +1846,9 @@ footer p {
 }
 
 .footer-methodology {
-  line-height: 1.45;
+  font-size: 0.7rem;
+  font-style: italic;
+  line-height: 1.4;
 }
 
 @keyframes spin {

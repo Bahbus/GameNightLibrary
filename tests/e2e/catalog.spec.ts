@@ -65,11 +65,30 @@ test("credits BGG with its official linked mark and explains local inferences", 
   page
 }) => {
   const attribution = page.getByRole("link", { name: /Powered by BGG/ });
+  const methodology = page.getByText(
+    /Play styles and match scores are Game Night Library inferences/
+  );
   await expect(attribution).toHaveAttribute("href", "https://boardgamegeek.com");
   await expect(attribution.locator("img")).toHaveAttribute("src", /powered-by-bgg-rgb\.svg$/);
-  await expect(
-    page.getByText(/Play styles and match scores are Game Night Library inferences/)
-  ).toBeVisible();
+  await expect(methodology).toBeVisible();
+  const typography = await methodology.evaluate((element) => {
+    const style = window.getComputedStyle(element);
+    const footerSize = Number.parseFloat(
+      window.getComputedStyle(element.closest("footer")!).fontSize
+    );
+    return {
+      fontSize: Number.parseFloat(style.fontSize),
+      footerSize,
+      fontStyle: style.fontStyle,
+      lineHeight: Number.parseFloat(style.lineHeight),
+      height: element.getBoundingClientRect().height
+    };
+  });
+  expect(typography.fontStyle).toBe("italic");
+  expect(typography.fontSize).toBeLessThan(typography.footerSize);
+  if ((page.viewportSize()?.width ?? 0) >= 1280) {
+    expect(typography.height).toBeLessThanOrEqual(typography.lineHeight * 1.1);
+  }
 });
 
 test("orders related navigation together and hides completed Setup", async ({ page }) => {
