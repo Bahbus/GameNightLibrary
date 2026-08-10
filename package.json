@@ -12,9 +12,8 @@
     "service:build": "esbuild service/server.ts --bundle --platform=node --format=esm --target=node24 --outfile=build/setup-service.mjs --packages=external",
     "service:dev": "node --import tsx service/server.ts",
     "service:start": "node build/setup-service.mjs",
-    "service:revision": "node --import tsx scripts/generateServiceRevision.ts",
     "service:deploy": "node --import tsx scripts/deploySetupService.ts",
-    "netlify:build": "npm run typecheck && npm run service:revision",
+    "vercel:build": "tsc --noEmit -p tsconfig.service.json",
     "dev": "npm run catalog:build && vite",
     "build": "npm run catalog:build && vite build",
     "preview": "vite preview",
@@ -41,7 +40,6 @@
     "request:apply": "node --import tsx scripts/applyIssueRequest.ts"
   },
   "dependencies": {
-    "@netlify/functions": "^5.3.0",
     "express": "^5.2.1",
     "express-rate-limit": "^8.6.1",
     "fast-xml-parser": "^5.3.1",
@@ -49,7 +47,6 @@
     "jose": "^6.2.7",
     "octokit": "^5.0.5",
     "preact": "^10.29.8",
-    "serverless-http": "^4.0.0",
     "yaml": "^2.8.1",
     "zod": "^4.1.12"
   },

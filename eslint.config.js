@@ -50,8 +50,8 @@ export default [
   },
   {
     files: [
+      "api/**/*.ts",
       "service/**/*.ts",
-      "netlify/functions/**/*.ts",
       "tests/fixtures/setupService.ts",
       "tests/unit/setupService*.ts"
     ],

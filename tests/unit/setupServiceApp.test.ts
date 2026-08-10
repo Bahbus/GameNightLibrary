@@ -73,6 +73,28 @@ describe("setup verification service", () => {
     expect(response.headers["x-powered-by"]).toBeUndefined();
   });
 
+  it("reports the exact deployed source revision", async () => {
+    const { gateway } = gatewayFixture();
+    const response = await request(
+      createSetupService({ config: setupServiceConfig(), gateway, revision: SOURCE_SHA })
+    ).get("/revision.json");
+    expect(response.status).toBe(200);
+    expect(response.headers["cache-control"]).toBe("no-store");
+    expect(response.body).toEqual({ revision: SOURCE_SHA });
+  });
+
+  it("fails closed when a deployment revision is unavailable", async () => {
+    const { gateway } = gatewayFixture();
+    const response = await request(
+      createSetupService({ config: setupServiceConfig(), gateway })
+    ).get("/revision.json");
+    expect(response.status).toBe(503);
+    expect(response.body).toEqual({
+      code: "revision_unavailable",
+      message: "Deployment revision is unavailable."
+    });
+  });
+
   it("completes signed state and PKCE verification before issuing a grant", async () => {
     const fixture = gatewayFixture();
     const app = createSetupService({ config: setupServiceConfig(), gateway: fixture.gateway });

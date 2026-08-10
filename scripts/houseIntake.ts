@@ -1,6 +1,6 @@
-import { parseCsv, recordsToCsv } from "./csv";
-import type { MatchingRow } from "./intakeMatching";
-import { SETUP_TIME_RANGE_VALUES } from "../src/lib/houseOptions";
+import { parseCsv, recordsToCsv } from "./csv.js";
+import type { MatchingRow } from "./intakeMatching.js";
+import { SETUP_TIME_RANGE_VALUES } from "../src/lib/houseOptions.js";
 
 export const HOUSE_INTAKE_HEADERS = [
   "slug",

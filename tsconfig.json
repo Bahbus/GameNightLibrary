@@ -18,13 +18,5 @@
     "jsx": "react-jsx",
     "jsxImportSource": "preact"
   },
-  "include": [
-    "src",
-    "scripts",
-    "service",
-    "netlify/functions",
-    "tests",
-    "vite.config.ts",
-    "playwright.config.ts"
-  ]
+  "include": ["api", "src", "scripts", "service", "tests", "vite.config.ts", "playwright.config.ts"]
 }

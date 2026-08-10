@@ -3,10 +3,11 @@ import express, { type NextFunction, type Request, type Response } from "express
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
 import { z, ZodError } from "zod";
-import type { ServiceConfig } from "./config";
-import { ServiceError } from "./errors";
-import type { SetupGateway } from "./github";
-import { SetupTokens, sha256Base64Url } from "./tokens";
+import type { ServiceConfig } from "./config.js";
+import { ServiceError } from "./errors.js";
+import type { SetupGateway } from "./github.js";
+import { createServiceRevision } from "../scripts/serviceRevision.js";
+import { SetupTokens, sha256Base64Url } from "./tokens.js";
 
 const PKCE_VALUE = /^[A-Za-z0-9_-]{43,128}$/;
 const SHA_256_VALUE = /^[A-Za-z0-9_-]{43}$/;
@@ -85,13 +86,16 @@ const submitRateLimit = rateLimit({
 export function createSetupService({
   config,
   gateway,
-  tokens = new SetupTokens(config)
+  tokens = new SetupTokens(config),
+  revision
 }: {
   config: ServiceConfig;
   gateway: SetupGateway;
   tokens?: SetupTokens;
+  revision?: string;
 }) {
   const app = express();
+  const deployedRevision = revision ? createServiceRevision(revision) : undefined;
   app.disable("x-powered-by");
   if (config.trustProxyHops) app.set("trust proxy", config.trustProxyHops);
   app.use((_request, response, next) => {
@@ -108,6 +112,17 @@ export function createSetupService({
 
   app.get("/healthz", (_request, response) => {
     response.set("cache-control", "no-store").json({ status: "ok" });
+  });
+
+  app.get("/revision.json", (_request, response) => {
+    if (!deployedRevision) {
+      response
+        .status(503)
+        .set("cache-control", "no-store")
+        .json({ code: "revision_unavailable", message: "Deployment revision is unavailable." });
+      return;
+    }
+    response.set("cache-control", "no-store").json(deployedRevision);
   });
 
   app.use("/auth", authRateLimit);

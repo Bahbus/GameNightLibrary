@@ -1,8 +1,8 @@
 import { App, Octokit } from "octokit";
 import { z } from "zod";
-import type { ServiceConfig } from "./config";
-import { ServiceError } from "./errors";
-import { questionnaireFromCsv, validateHouseSubmission } from "./houseSubmission";
+import type { ServiceConfig } from "./config.js";
+import { ServiceError } from "./errors.js";
+import { questionnaireFromCsv, validateHouseSubmission } from "./houseSubmission.js";
 
 const tokenResponseSchema = z.object({
   access_token: z.string().min(1),

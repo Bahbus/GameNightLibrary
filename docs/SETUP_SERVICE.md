@@ -4,7 +4,7 @@ The Setup service is the only trusted backend for the guided owner questionnaire
 remains a static public site. The service verifies a GitHub collaborator, serves the questionnaire
 only after verification, and creates a reviewable pull request containing the completed answers.
 
-The implementation is provider-neutral:
+The implementation is provider-neutral, with a thin Vercel entry point in `api/index.ts`:
 
 - Node.js 24 LTS and standard HTTP
 - an OCI `Dockerfile`
@@ -12,9 +12,8 @@ The implementation is provider-neutral:
 - environment variables for runtime configuration
 - no database, cookies, proprietary data format, or provider SDK
 
-`netlify/functions/setup.ts` is a thin hosting adapter around the same Express application. The
-Docker and Compose paths remain supported, so moving away from Netlify does not require changing
-the service or its data.
+The Docker and Compose paths remain supported, so moving away from Vercel does not require
+changing the service or its data.
 
 ## Security and repository boundaries
 
@@ -104,15 +103,14 @@ Portable container:
 docker compose up --build
 ```
 
-Netlify-compatible build:
+Vercel-compatible type check:
 
 ```sh
-npm run netlify:build
-npx netlify-cli@27.0.1 build
+npm run vercel:build
 ```
 
-The CLI is intentionally not an application dependency. Pinning the current CLI in the command
-keeps deployment tooling out of the service's production dependency tree.
+The Vercel CLI is intentionally not an application dependency. The guarded deployment command
+pins its version while keeping provider tooling out of the service's production dependency tree.
 
 The container runs as an unprivileged user with a read-only filesystem and exposes port `8787`.
 `GET /healthz` is the only unauthenticated data endpoint.
@@ -129,17 +127,15 @@ The hosting platform must provide:
 If a reverse proxy supplies the real client address, set `TRUST_PROXY_HOPS` to its exact hop count
 after verifying that the proxy overwrites forwarded headers. Leave it at `0` otherwise.
 
-## Deploy on Netlify without a repository integration
+## Deploy on Vercel without a repository integration
 
-Netlify Functions can host the service on the Free plan without installing Netlify's GitHub App.
-This preserves GitHub access through the dedicated, repository-scoped Game Night Library Setup
-App only.
+Vercel Functions can host the service on the Hobby plan without installing Vercel's GitHub App.
+This keeps GitHub access limited to the dedicated, repository-scoped Game Night Library Setup App.
 
-1. Create an empty Netlify project, or run `npx netlify-cli@27.0.1 deploy` and select **Create a
-   new project**.
-2. Store the configuration variables above for the production deploy context. Mark
-   `SETUP_GITHUB_CLIENT_SECRET`, `SETUP_GITHUB_PRIVATE_KEY`, and `SETUP_SIGNING_SECRET` as secret
-   values using Netlify's Secrets Controller.
+1. Run `npx --yes vercel@58.9.0 link` and link the checkout to the service project.
+2. Store every configuration variable above in the Production environment only. Mark all values
+   sensitive; at minimum, never expose `SETUP_GITHUB_CLIENT_SECRET`, `SETUP_GITHUB_PRIVATE_KEY`, or
+   `SETUP_SIGNING_SECRET`.
 3. Deploy from a committed checkout:
 
    ```sh
@@ -148,22 +144,18 @@ App only.
 
    The guarded command refuses to deploy unless the worktree is clean, the current branch is
    `main`, and its commit exactly matches `origin/main`. It runs the complete repository check,
-   deploys through the pinned Netlify CLI, and then verifies both the health response and the
-   deployed commit SHA. Local Netlify authentication and the ignored `.netlify/state.json` link
-   remain required; no Netlify credential is added to the repository or GitHub Actions.
+   deploys through the pinned Vercel CLI, and then verifies both the health response and the
+   deployed commit SHA. Local Vercel authentication and the ignored `.vercel/project.json` link
+   remain required; no Vercel credential is added to the repository or GitHub Actions.
 
 4. Confirm that `GET /healthz` returns `{"status":"ok"}`, `GET /revision.json` identifies the
    intended full Git commit SHA, and the root page identifies the service.
 
-The committed `netlify.toml` selects Node.js 24, builds the TypeScript service, bundles the
-function, and rewrites only the health, authorization, and Setup API routes. `.netlify/` is local
-provider state and is ignored by Git.
-
-Netlify Free does not allow custom per-variable scopes. Its secret preset makes secret values
-available to Builds, Functions, and Runtime while excluding post-processing. Keep this project
-disconnected from Git providers and deploy only reviewed commits from a trusted checkout so
-untrusted pull requests cannot execute a build with those values. If a future Netlify plan enables
-custom scopes, restrict all Setup variables to Functions.
+The committed `vercel.json` selects the service-only build. `api/index.ts` exports the Express
+application through Vercel's supported entry-point convention, while `service-static/` supplies a
+small provider-neutral landing page and `.vercel/` remains ignored local provider state. Keep the
+project disconnected from Git providers and deploy only reviewed commits from a trusted checkout
+so untrusted pull requests cannot execute a build with secrets.
 
 ## Activate GitHub Pages
 

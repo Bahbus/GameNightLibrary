@@ -1,5 +1,5 @@
 import { createServer } from "node:http";
-import { createConfiguredSetupService } from "./configuredApp";
+import { createConfiguredSetupService } from "./configuredApp.js";
 
 const { app, config } = createConfiguredSetupService();
 const server = createServer(app);

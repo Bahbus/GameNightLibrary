@@ -13,5 +13,6 @@ lighthouse-report.json
 .env
 .env.service
 .netlify/
-netlify/public/revision.json
+.vercel/
+.env.local
 .DS_Store
