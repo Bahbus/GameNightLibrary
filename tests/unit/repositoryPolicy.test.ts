@@ -1,5 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { describe, expect, it } from "vitest";
+import { parse } from "yaml";
 
 const loadPolicy = async () =>
   JSON.parse(await readFile("config/repository-policy.json", "utf8")) as Record<string, unknown>;
@@ -71,5 +72,22 @@ describe("repository governance policy", () => {
     expect(workflow).toContain("npm run wiki:build");
     expect(workflow).toContain('git -C "$wiki_directory" rm -r --ignore-unmatch -- .');
     expect(workflow).not.toMatch(/uses:\s+[^\s@]+@(?![a-f0-9]{40}\b)/);
+  });
+
+  it("does not rebuild Pages for documentation-only commits", async () => {
+    const workflow = parse(await readFile(".github/workflows/deploy.yml", "utf8")) as {
+      on: {
+        push: { branches: string[]; "paths-ignore": string[] };
+        schedule: Array<{ cron: string }>;
+        workflow_dispatch: null;
+      };
+    };
+
+    expect(workflow.on.push).toEqual({
+      branches: ["main"],
+      "paths-ignore": ["**/*.md", "LICENSE"]
+    });
+    expect(workflow.on.schedule).toEqual([{ cron: "17 10 * * 3" }]);
+    expect(workflow.on.workflow_dispatch).toBeNull();
   });
 });
