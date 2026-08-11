@@ -79,6 +79,7 @@ describe("inventory schema", () => {
       ...game("local-game", 10),
       bggId: undefined,
       sourceUrl: "https://publisher.example/local-game",
+      house: { ...game("local-game", 10).house, modes: ["competitive"] },
       overrides: {
         minPlayers: 2,
         maxPlayers: 8,
@@ -99,11 +100,34 @@ describe("inventory schema", () => {
             ...game("local-game", 10),
             bggId: undefined,
             sourceUrl: "https://publisher.example/local-game",
+            house: { ...game("local-game", 10).house, modes: ["competitive"] },
             overrides: { minPlayers: 2 }
           }
         ]
       })
     ).toThrow(/maxPlayers/);
+  });
+
+  it("rejects a local-only game without a supported mode", () => {
+    expect(() =>
+      parseInventory({
+        version: 1,
+        games: [
+          {
+            ...game("local-game", 10),
+            bggId: undefined,
+            sourceUrl: "https://publisher.example/local-game",
+            overrides: {
+              minPlayers: 2,
+              maxPlayers: 4,
+              minMinutes: 10,
+              maxMinutes: 30,
+              minAge: 8
+            }
+          }
+        ]
+      })
+    ).toThrow(/supported mode/);
   });
 
   it("lets a non-standalone local expansion inherit its base game's filter values", () => {
@@ -125,7 +149,7 @@ describe("inventory schema", () => {
     });
   });
 
-  it("requires complete filter values for a standalone local expansion", () => {
+  it("requires a local-only standalone expansion to be modeled as a base game", () => {
     const base = {
       ...game("base", 10),
       expansions: [
@@ -138,7 +162,7 @@ describe("inventory schema", () => {
       ]
     };
 
-    expect(() => parseInventory({ version: 1, games: [base] })).toThrow(/minPlayers/);
+    expect(() => parseInventory({ version: 1, games: [base] })).toThrow(/modeled as a base game/);
   });
 
   it("allows multiple local-only games while still enforcing unique slugs", () => {
@@ -146,6 +170,7 @@ describe("inventory schema", () => {
       ...game(slug, 10),
       bggId: undefined,
       sourceUrl: `https://publisher.example/${slug}`,
+      house: { ...game(slug, 10).house, modes: ["competitive"] },
       overrides: {
         minPlayers: 1,
         maxPlayers: 4,

@@ -45,11 +45,11 @@ const localIdentitySchema = {
   sourceUrl: z.url().optional()
 };
 
-const requireLocalDetails = (
+const requireLocalGameDetails = (
   value: {
     bggId?: number;
     sourceUrl?: string;
-    standalone?: boolean;
+    house?: { modes?: string[] };
     overrides?: Record<string, number | undefined>;
   },
   context: z.RefinementCtx
@@ -62,7 +62,6 @@ const requireLocalDetails = (
       path: ["sourceUrl"]
     });
   }
-  if (value.standalone === false) return;
   localValues.forEach((field) => {
     if (value.overrides?.[field] === undefined) {
       context.addIssue({
@@ -72,6 +71,34 @@ const requireLocalDetails = (
       });
     }
   });
+  if (!value.house?.modes?.length) {
+    context.addIssue({
+      code: "custom",
+      message: "A local-only game requires at least one supported mode.",
+      path: ["house", "modes"]
+    });
+  }
+};
+
+const requireLocalExpansionDetails = (
+  value: { bggId?: number; sourceUrl?: string; standalone?: boolean },
+  context: z.RefinementCtx
+) => {
+  if (value.bggId !== undefined) return;
+  if (!value.sourceUrl) {
+    context.addIssue({
+      code: "custom",
+      message: "A local-only item requires sourceUrl when bggId is absent.",
+      path: ["sourceUrl"]
+    });
+  }
+  if (value.standalone) {
+    context.addIssue({
+      code: "custom",
+      message: "A local-only standalone expansion must be modeled as a base game.",
+      path: ["standalone"]
+    });
+  }
 };
 
 const expansionSchema = z
@@ -89,7 +116,7 @@ const expansionSchema = z
     compatibilityNotes: z.string().min(1).optional(),
     overrides: overridesSchema.optional()
   })
-  .superRefine(requireLocalDetails);
+  .superRefine(requireLocalExpansionDetails);
 
 const gameSchema = z
   .object({
@@ -126,7 +153,7 @@ const gameSchema = z
     overrides: overridesSchema.optional(),
     expansions: z.array(expansionSchema).default([])
   })
-  .superRefine(requireLocalDetails);
+  .superRefine(requireLocalGameDetails);
 
 export const inventorySchema = z
   .object({

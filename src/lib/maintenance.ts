@@ -6,6 +6,7 @@ export interface MaintenanceRequest {
   slug: string;
   parentId: string;
   parentSlug: string;
+  modes: string;
   notes: string;
 }
 
@@ -49,6 +50,7 @@ export function buildIssueUrl(repositoryUrl: string, request: MaintenanceRequest
     slug: request.slug,
     "parent-bgg-id": request.parentId,
     "parent-slug": request.parentSlug,
+    modes: request.modes,
     notes: request.notes
   });
   [...params.entries()].forEach(([key, value]) => {

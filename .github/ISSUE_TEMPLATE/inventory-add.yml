@@ -126,6 +126,12 @@ body:
     attributes:
       label: Minimum age
       description: Required for a local-only item.
+  - type: input
+    id: modes
+    attributes:
+      label: Modes
+      description: "Required for a local-only base game. Separate supported values with semicolons: competitive; cooperative; team; solo."
+      placeholder: competitive;team
   - type: textarea
     id: notes
     attributes:

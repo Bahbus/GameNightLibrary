@@ -90,12 +90,14 @@ describe("inventory issue transactions", () => {
         "Maximum players": "8",
         "Minimum minutes": "15",
         "Maximum minutes": "45",
-        "Minimum age": "12"
+        "Minimum age": "12",
+        Modes: "competitive;team"
       })
     );
 
     expect(result.games.find((game) => game.slug === "local-game")).toMatchObject({
       sourceUrl: "https://publisher.example/local-game",
+      house: { modes: ["competitive", "team"] },
       overrides: {
         minPlayers: 2,
         maxPlayers: 8,
@@ -104,6 +106,41 @@ describe("inventory issue transactions", () => {
         minAge: 12
       }
     });
+  });
+
+  it("rejects a local-only game without supported modes", () => {
+    expect(() =>
+      applyInventoryTransaction(
+        inventory(),
+        "add",
+        issueBody({
+          "Game name": "Local Game",
+          "Stable slug": "local-game",
+          "Source URL": "https://publisher.example/local-game",
+          "Minimum players": "2",
+          "Maximum players": "8",
+          "Minimum minutes": "15",
+          "Maximum minutes": "45",
+          "Minimum age": "12"
+        })
+      )
+    ).toThrow(/supported mode/);
+  });
+
+  it("rejects a local-only standalone expansion", () => {
+    expect(() =>
+      applyInventoryTransaction(
+        inventory(),
+        "add",
+        issueBody({
+          "Game name": "Standalone Local Module",
+          "Stable slug": "standalone-local-module",
+          "Source URL": "https://publisher.example/standalone-local-module",
+          "Parent slug": "base-game",
+          Standalone: "Yes"
+        })
+      )
+    ).toThrow(/modeled as a base game/);
   });
 
   it("adds an expansion when both parent identifiers agree", () => {

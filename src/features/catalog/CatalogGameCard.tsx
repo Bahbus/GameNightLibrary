@@ -107,6 +107,7 @@ export function GameCard({
               slug: game.slug,
               parentId: "",
               parentSlug: "",
+              modes: "",
               notes: ""
             })}
           >

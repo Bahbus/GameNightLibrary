@@ -163,6 +163,7 @@ export function GameInspector({ entry, onClose }: { entry: ScoredGame; onClose: 
               slug: game.slug,
               parentId: "",
               parentSlug: "",
+              modes: "",
               notes: ""
             })}
           >

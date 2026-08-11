@@ -359,6 +359,12 @@ test("prefills an authenticated GitHub maintenance request", async ({ page }) =>
   expect(openedRequest.url).toContain("inventory-add.yml");
   await expect(page.getByRole("heading", { name: "Manage the library" })).toBeVisible();
 
+  await page.getByLabel("BoardGameGeek ID or product link").fill("https://publisher.example/game");
+  await expect(page.getByRole("group", { name: "How can this game be played?" })).toBeVisible();
+  await expect(addButton).toBeDisabled();
+  await page.getByLabel("Cooperative").check();
+  await expect(addButton).toBeEnabled();
+
   await page.getByRole("radio", { name: "Update" }).check();
   await page.getByLabel("Game or expansion").selectOption("forest-council");
   await expect(
