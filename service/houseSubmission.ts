@@ -2,8 +2,8 @@ import {
   houseIntakeToCsv,
   validateHouseIntakeCsv,
   type HouseIntakeRow
-} from "../scripts/houseIntake.js";
-import { SETUP_TIME_RANGE_VALUES } from "../src/lib/houseOptions.js";
+} from "../shared/setup/houseIntake.js";
+import { SETUP_TIME_RANGE_VALUES } from "../shared/setup/houseOptions.js";
 
 const FORMULA_PREFIX = /^[\t\r ]*[=+\-@]/;
 const INTEGER = /^\d+$/;

@@ -1,6 +1,6 @@
 import { execFileSync, spawnSync } from "node:child_process";
 import { z } from "zod";
-import { createServiceRevision } from "./serviceRevision";
+import { createServiceRevision } from "../shared/setup/serviceRevision";
 
 const VERCEL_CLI_VERSION = "58.9.0";
 const DEFAULT_SERVICE_URL = "https://game-night-library-setup.vercel.app/";

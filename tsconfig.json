@@ -18,5 +18,14 @@
     "jsx": "react-jsx",
     "jsxImportSource": "preact"
   },
-  "include": ["api", "src", "scripts", "service", "tests", "vite.config.ts", "playwright.config.ts"]
+  "include": [
+    "api",
+    "shared",
+    "src",
+    "scripts",
+    "service",
+    "tests",
+    "vite.config.ts",
+    "playwright.config.ts"
+  ]
 }

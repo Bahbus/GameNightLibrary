@@ -9,7 +9,7 @@ import type {
   TableSpace,
   ValueOverrides
 } from "../src/types";
-import { SETUP_TIME_RANGE_VALUES } from "../src/lib/houseOptions";
+import { SETUP_TIME_RANGE_VALUES } from "../shared/setup/houseOptions";
 import { fieldsFromIssue } from "./issueRequest";
 
 export type InventoryOperation = "add" | "update" | "remove";

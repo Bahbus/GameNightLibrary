@@ -1,12 +1,4 @@
 {
   "extends": "./tsconfig.json",
-  "include": [
-    "api/index.ts",
-    "scripts/csv.ts",
-    "scripts/houseIntake.ts",
-    "scripts/intakeMatching.ts",
-    "scripts/serviceRevision.ts",
-    "service",
-    "src/lib/houseOptions.ts"
-  ]
+  "include": ["api/index.ts", "service", "shared"]
 }

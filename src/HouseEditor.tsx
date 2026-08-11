@@ -21,7 +21,7 @@ import {
   MOOD_OPTIONS,
   SETUP_TIME_RANGES,
   type HouseTagOption
-} from "./lib/houseOptions";
+} from "../shared/setup/houseOptions";
 import {
   applyHowItPlaysSuggestion,
   parseSetupSuggestions,

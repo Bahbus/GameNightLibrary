@@ -56,6 +56,18 @@ The Preact application performs these operations locally:
 The browser never receives the BGG API token, GitHub App private key, client secret, installation
 token, or service signing key. It does not directly write repository contents.
 
+## Code ownership boundaries
+
+Reusable Setup contracts live under `shared/setup`. This layer owns questionnaire rows and CSV
+serialization, guided-answer options, and deployed-revision validation. The browser, setup service,
+and build scripts may depend on it, but it has no dependency on those consumers. Generic CSV
+parsing lives alongside it under `shared`.
+
+Browser presentation remains under `src`, runtime HTTP and GitHub integration remain under
+`service`, and repository-maintenance commands remain under `scripts`. Script-only preparation,
+such as creating the initial house questionnaire from the matching manifest, stays in `scripts`
+while reusing the shared contract.
+
 ## Mutation boundaries
 
 Routine maintenance begins with a prefilled GitHub issue. Approved automation applies exactly one

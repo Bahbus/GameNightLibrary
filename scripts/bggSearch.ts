@@ -1,6 +1,6 @@
 import { XMLParser } from "fast-xml-parser";
 import type { MatchingRow } from "./intakeMatching";
-import { recordsToCsv } from "./csv";
+import { recordsToCsv } from "../shared/csv";
 import { BGG_REQUEST_INTERVAL_MS } from "./bgg";
 
 export interface BggSearchCandidate {

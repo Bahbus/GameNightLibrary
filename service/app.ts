@@ -6,7 +6,7 @@ import { z, ZodError } from "zod";
 import type { ServiceConfig } from "./config.js";
 import { ServiceError } from "./errors.js";
 import type { SetupGateway } from "./github.js";
-import { createServiceRevision } from "../scripts/serviceRevision.js";
+import { createServiceRevision } from "../shared/setup/serviceRevision.js";
 import { SetupTokens, sha256Base64Url } from "./tokens.js";
 
 const PKCE_VALUE = /^[A-Za-z0-9_-]{43,128}$/;
