@@ -72,6 +72,11 @@ while reusing shared contracts. Browser compatibility modules may re-export shar
 parsers, but repository scripts import their owning shared domain directly rather than depending on
 the browser tree.
 
+Feature-owned browser presentation lives under `src/features`. The collaborator-only Setup route
+owns its questionnaire components and responsive styles there and is loaded as a separate browser
+chunk only when Setup is opened. Public catalog visitors therefore do not download the private
+questionnaire interface or its styles.
+
 ## Mutation boundaries
 
 Routine maintenance begins with a prefilled GitHub issue. Approved automation applies exactly one

@@ -34,7 +34,7 @@ configuration.
 | Path                 | Responsibility                                                                  |
 | -------------------- | ------------------------------------------------------------------------------- |
 | `api/`               | Thin Vercel entry point for the Setup service                                   |
-| `src/`               | Preact interface, filtering, scoring, roulette, Setup, and maintenance UI       |
+| `src/`               | Preact shell and feature-owned catalog, roulette, Setup, and maintenance UI     |
 | `scripts/`           | Inventory validation/import, BGG enrichment, catalog generation, and operations |
 | `service/`           | Provider-neutral Setup verification and submission service                      |
 | `data/`              | Authored inventory, wish list, matching, and house-answer records               |
@@ -141,3 +141,7 @@ PWA and does not install an offline cache. UI changes should preserve:
 Automated checks are strong regression coverage, not a substitute for every physical NVDA, JAWS,
 VoiceOver, browser, and operating-system combination. Report what was actually tested in pull
 requests.
+
+Keep feature-only presentation with its feature. In particular, Setup components and responsive
+styles live under `src/features/setup` and must remain behind the lazy Setup route so the public
+catalog bundle does not include the authenticated questionnaire.

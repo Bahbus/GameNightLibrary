@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "preact/hooks";
 import { HouseEditor } from "./HouseEditor";
+import "./setup.css";
 import {
   beginSetupVerification,
   clearSetupAccessSession,
@@ -11,7 +12,7 @@ import {
   takeSetupAuthValues,
   verifySetupAccess,
   type SetupAccessSession
-} from "./lib/setupAccess";
+} from "../../lib/setupAccess";
 
 type GateState =
   | { kind: "checking" }
