@@ -77,13 +77,15 @@ describe("repository governance policy", () => {
     expect(policy.pagesBranchPolicies).toEqual([{ name: "main", type: "branch" }]);
   });
 
-  it("runs inventory automation only for a new collaborator request or explicit approval", async () => {
-    const workflow = await readFile(".github/workflows/inventory-request.yml", "utf8");
+  it("runs library automation only for a new collaborator request or explicit approval", async () => {
+    const workflow = await readFile(".github/workflows/library-request.yml", "utf8");
 
     expect(workflow).toContain("github.event.action == 'opened'");
     expect(workflow).toContain("github.event.action == 'labeled'");
     expect(workflow).toContain("github.event.label.name == 'approved-inventory-change'");
-    expect(workflow).toContain("Exactly one inventory operation label is required");
+    expect(workflow).toContain("contains(github.event.issue.labels.*.name, 'wishlist')");
+    expect(workflow).toContain("Exactly one library request label is required");
+    expect(workflow).toContain('path="data/wishlist.yaml"');
     expect(workflow).not.toContain("contains(join(github.event.issue.labels.*.name");
   });
 
