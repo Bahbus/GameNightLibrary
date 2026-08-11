@@ -121,6 +121,11 @@ Use `npm run service:deploy` only from a clean, current `main`. It checks the re
 reviewed service through the pinned Vercel CLI, and verifies live health and revision responses.
 The full provider configuration and security boundaries live in [Setup service](SETUP_SERVICE.md).
 
+`tsconfig.service.json` deliberately extends the DOM-free base configuration rather than the
+browser configuration. The OCI build produces a self-contained service bundle; dependencies used
+only by repository enrichment and YAML/CSV tooling remain development dependencies and are not
+part of the service runtime image.
+
 ## Browser and accessibility support
 
 The application targets current evergreen browsers and requires a network connection. It is not a

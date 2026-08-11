@@ -12,11 +12,7 @@ playwright-report/
 public/
 test-results/
 tests/
-scripts/*
-!scripts/csv.ts
-!scripts/houseIntake.ts
-!scripts/intakeMatching.ts
-!scripts/serviceRevision.ts
+scripts/
 service/server.ts
 compose.yaml
 Dockerfile
