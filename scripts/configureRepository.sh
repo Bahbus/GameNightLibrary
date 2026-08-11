@@ -25,17 +25,9 @@ apply_policy() {
   jq -c "$selector" "$policy_file" | gh api --method "$method" "$endpoint" --input - >/dev/null
 }
 
-for label in \
-  "inventory:add|1d76db|Add an inventory item" \
-  "inventory:update|5319e7|Update an inventory item" \
-  "inventory:remove|b60205|Remove an inventory item" \
-  "wishlist|7c3aed|Unowned game request or wish-list candidate" \
-  "approved-inventory-change|0e8a16|Maintainer-approved public suggestion" \
-  "suggestion|d4c5f9|Public suggestion awaiting review" \
-  "needs-info|d876e3|Request needs correction"; do
-  IFS='|' read -r name color description <<< "$label"
+while IFS=$'\t' read -r name color description; do
   gh label create "$name" --repo "$repository" --color "$color" --description "$description" --force
-done
+done < <(jq -r '.labels[] | [.name, .color, .description] | @tsv' "$policy_file")
 
 if gh api "repos/$repository/pages" >/dev/null 2>&1; then
   apply_policy PUT "repos/$repository/pages" '.pages'
@@ -46,6 +38,16 @@ fi
 apply_policy PUT "repos/$repository/actions/permissions" '.actionsPermissions'
 apply_policy PUT "repos/$repository/actions/permissions/selected-actions" '.selectedActions'
 apply_policy PUT "repos/$repository/actions/permissions/workflow" '.workflowPermissions'
+
+apply_policy PUT "repos/$repository/environments/github-pages" '{deployment_branch_policy: .pagesEnvironment.deployment_branch_policy}'
+pages_policies="$(gh api "repos/$repository/environments/github-pages/deployment-branch-policies")"
+while IFS=$'\t' read -r name type; do
+  if ! jq -e --arg name "$name" --arg type "$type" \
+    '.branch_policies[] | select(.name == $name and .type == $type)' <<< "$pages_policies" >/dev/null; then
+    gh api --method POST "repos/$repository/environments/github-pages/deployment-branch-policies" \
+      -f name="$name" -f type="$type" >/dev/null
+  fi
+done < <(jq -r '.pagesBranchPolicies[] | [.name, .type] | @tsv' "$policy_file")
 
 gh api --method PUT "repos/$repository/vulnerability-alerts" \
   -H "Accept: application/vnd.github+json" >/dev/null

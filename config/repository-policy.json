@@ -16,8 +16,59 @@
   "pages": {
     "build_type": "workflow"
   },
+  "pagesEnvironment": {
+    "can_admins_bypass": true,
+    "deployment_branch_policy": {
+      "protected_branches": false,
+      "custom_branch_policies": true
+    }
+  },
+  "pagesBranchPolicies": [
+    {
+      "name": "main",
+      "type": "branch"
+    }
+  ],
+  "labels": [
+    {
+      "name": "inventory:add",
+      "color": "1d76db",
+      "description": "Add an inventory item"
+    },
+    {
+      "name": "inventory:update",
+      "color": "5319e7",
+      "description": "Update an inventory item"
+    },
+    {
+      "name": "inventory:remove",
+      "color": "b60205",
+      "description": "Remove an inventory item"
+    },
+    {
+      "name": "wishlist",
+      "color": "7c3aed",
+      "description": "Unowned game request or wish-list candidate"
+    },
+    {
+      "name": "approved-inventory-change",
+      "color": "0e8a16",
+      "description": "Maintainer-approved public suggestion"
+    },
+    {
+      "name": "suggestion",
+      "color": "d4c5f9",
+      "description": "Public suggestion awaiting review"
+    },
+    {
+      "name": "needs-info",
+      "color": "d876e3",
+      "description": "Request needs correction"
+    }
+  ],
   "repositoryPatch": {
     "has_issues": true,
+    "has_wiki": true,
     "security_and_analysis": {
       "secret_scanning": {
         "status": "enabled"

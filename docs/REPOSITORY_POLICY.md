@@ -14,8 +14,11 @@ this repository. `scripts/configureRepository.sh` applies that contract; the sep
 - Branch protection applies to administrators, requires resolved conversations, and prohibits
   force pushes and deletion. No approving review is required while there is one maintainer.
 - GitHub Pages deploys through Actions.
+- The `github-pages` environment accepts deployments only from `main`.
 - Issues, Dependabot alerts and security updates, automated security fixes, private vulnerability
   reporting, secret scanning, and push protection are enabled.
+- Inventory automation runs once when a collaborator opens a structured request, or when a
+  maintainer explicitly approves a public request. Unrelated label changes do not retrigger it.
 
 ## Read-only audit
 
@@ -25,9 +28,13 @@ Authenticate GitHub CLI with access to the repository, install `jq`, then run:
 npm run repository:audit -- Bahbus/GameNightLibrary
 ```
 
-The audit performs only GitHub API GET requests. It prints one pass or mismatch per policy area,
-followed by current open Dependabot, code-scanning, and secret-scanning alert counts. It never
-prints authentication tokens or secret values. A mismatch exits nonzero without changing GitHub.
+The audit performs only GitHub API GET requests and unauthenticated reads of the configured Setup
+service health and revision endpoints. It prints one pass or mismatch per policy area, verifies the
+maintenance labels and Pages deployment branch, and reports current open Dependabot, code-scanning,
+and secret-scanning alert counts. It also compares the deployed Setup revision with `main`: an older
+revision is acceptable only when no service runtime input has changed. Set `SETUP_SERVICE_URL` to
+audit a non-default deployment. The command never prints authentication tokens or secret values. A
+mismatch exits nonzero without changing GitHub or the service.
 
 Treat a mismatch as a review prompt, not permission to overwrite the live setting. Compare the
 live result, this policy, and the repository's current workflows. Update the reviewed policy first
@@ -42,10 +49,10 @@ npm run repository:configure -- Bahbus/GameNightLibrary
 ```
 
 Review `config/repository-policy.json` and the script diff before running it. The command
-idempotently creates the standard labels, selects the Pages workflow source, applies the Actions
-allowlist and token defaults, enables supported security features, and replaces `main` branch
-protection with the reviewed policy. Meaningful API errors stop the script; it does not silently
-ignore unexpected failures.
+idempotently creates the standard labels, selects the Pages workflow source, restricts its
+environment to `main`, applies the Actions allowlist and token defaults, enables supported security
+features, and replaces `main` branch protection with the reviewed policy. Meaningful API errors
+stop the script; it does not silently ignore unexpected failures.
 
 After applying it, rerun the read-only audit and inspect GitHub's repository settings. Do not run
 the mutating command from an untrusted pull request or with credentials for a broader account than

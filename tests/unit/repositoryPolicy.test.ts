@@ -43,6 +43,7 @@ describe("repository governance policy", () => {
   });
 
   it("uses the shared policy for mutation and keeps the audit read-only", async () => {
+    const policy = await loadPolicy();
     const configure = await readFile("scripts/configureRepository.sh", "utf8");
     const audit = await readFile("scripts/auditRepository.sh", "utf8");
 
@@ -51,6 +52,9 @@ describe("repository governance policy", () => {
       ".selectedActions",
       ".workflowPermissions",
       ".pages",
+      ".pagesEnvironment",
+      ".pagesBranchPolicies",
+      ".labels",
       ".repositoryPatch",
       ".branchProtection"
     ]) {
@@ -61,6 +65,26 @@ describe("repository governance policy", () => {
     expect(audit).not.toContain("--method");
     expect(audit).not.toContain("gh label");
     expect(audit).toContain("Repository policy audit passed");
+    expect(audit).toContain("Setup service revision covers current service inputs");
+    expect(policy.repositoryPatch).toMatchObject({ has_issues: true, has_wiki: true });
+    expect(policy.pagesEnvironment).toEqual({
+      can_admins_bypass: true,
+      deployment_branch_policy: {
+        protected_branches: false,
+        custom_branch_policies: true
+      }
+    });
+    expect(policy.pagesBranchPolicies).toEqual([{ name: "main", type: "branch" }]);
+  });
+
+  it("runs inventory automation only for a new collaborator request or explicit approval", async () => {
+    const workflow = await readFile(".github/workflows/inventory-request.yml", "utf8");
+
+    expect(workflow).toContain("github.event.action == 'opened'");
+    expect(workflow).toContain("github.event.action == 'labeled'");
+    expect(workflow).toContain("github.event.label.name == 'approved-inventory-change'");
+    expect(workflow).toContain("Exactly one inventory operation label is required");
+    expect(workflow).not.toContain("contains(join(github.event.issue.labels.*.name");
   });
 
   it("publishes only reviewed documentation to the Wiki with pinned Actions", async () => {

@@ -10,7 +10,7 @@ if [[ ! "$repository" =~ ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$ ]]; then
   echo "Repository must use owner/name format." >&2
   exit 1
 fi
-for command_name in gh jq; do
+for command_name in curl gh jq; do
   if ! command -v "$command_name" >/dev/null; then
     echo "$command_name is required." >&2
     exit 1
@@ -74,9 +74,19 @@ check_json \
   '{build_type}' \
   '.pages'
 check_json \
+  "Pages environment policy" \
+  "repos/$repository/environments/github-pages" \
+  '{can_admins_bypass, deployment_branch_policy}' \
+  '.pagesEnvironment'
+check_json \
+  "Pages deployment branches" \
+  "repos/$repository/environments/github-pages/deployment-branch-policies" \
+  '[.branch_policies[] | {name, type}] | sort_by(.name, .type)' \
+  '.pagesBranchPolicies | sort_by(.name, .type)'
+check_json \
   "Repository security settings" \
   "repos/$repository" \
-  '{has_issues, security_and_analysis: {secret_scanning: {status: .security_and_analysis.secret_scanning.status}, secret_scanning_push_protection: {status: .security_and_analysis.secret_scanning_push_protection.status}}}' \
+  '{has_issues, has_wiki, security_and_analysis: {secret_scanning: {status: .security_and_analysis.secret_scanning.status}, secret_scanning_push_protection: {status: .security_and_analysis.secret_scanning_push_protection.status}}}' \
   '.repositoryPatch'
 check_json \
   "Automated security fixes" \
@@ -96,6 +106,20 @@ check_json \
 
 check_enabled_endpoint "Dependabot alerts" "repos/$repository/vulnerability-alerts"
 
+labels_response="$(gh api --paginate --slurp "repos/$repository/labels?per_page=100" | jq 'add')"
+actual_labels="$(jq -c --slurpfile policy "$policy_file" \
+  '[.[] | select(.name as $name | $policy[0].labels | any(.name == $name)) | {name, color, description}] | sort_by(.name)' \
+  <<< "$labels_response")"
+expected_labels="$(jq -c '.labels | sort_by(.name)' "$policy_file")"
+if [[ "$actual_labels" == "$expected_labels" ]]; then
+  echo "PASS  Maintenance labels"
+else
+  echo "FAIL  Maintenance labels" >&2
+  echo "      expected: $expected_labels" >&2
+  echo "      actual:   $actual_labels" >&2
+  failures=$((failures + 1))
+fi
+
 repository_response="$(gh api "repos/$repository")"
 if [[ "$(jq -r '.security_and_analysis.dependabot_security_updates.status' <<< "$repository_response")" == "enabled" ]]; then
   echo "PASS  Dependabot security updates"
@@ -108,6 +132,49 @@ dependabot_alerts="$(count_alerts "repos/$repository/dependabot/alerts?state=ope
 code_scanning_alerts="$(count_alerts "repos/$repository/code-scanning/alerts?state=open&per_page=100")"
 secret_scanning_alerts="$(count_alerts "repos/$repository/secret-scanning/alerts?state=open&per_page=100")"
 echo "INFO  Open alerts: Dependabot $dependabot_alerts, code scanning $code_scanning_alerts, secret scanning $secret_scanning_alerts"
+
+service_url="${SETUP_SERVICE_URL:-https://game-night-library-setup.vercel.app/}"
+service_url="${service_url%/}"
+if health_response="$(curl --connect-timeout 5 --max-time 15 --fail --silent --show-error "$service_url/healthz")" &&
+  [[ "$(jq -r '.status // empty' <<< "$health_response")" == "ok" ]]; then
+  echo "PASS  Setup service health"
+else
+  echo "FAIL  Setup service health at $service_url" >&2
+  failures=$((failures + 1))
+fi
+
+if revision_response="$(curl --connect-timeout 5 --max-time 15 --fail --silent --show-error "$service_url/revision.json")"; then
+  service_revision="$(jq -r '.revision // empty' <<< "$revision_response")"
+else
+  service_revision=""
+fi
+if [[ "$service_revision" =~ ^[a-f0-9]{40}$ ]]; then
+  if compare_response="$(gh api "repos/$repository/compare/$service_revision...main")"; then
+    compare_status="$(jq -r '.status' <<< "$compare_response")"
+    service_paths='^(api/|service/|shared/csv\.ts$|shared/setup/|Dockerfile$|package(-lock)?\.json$|tsconfig(\.service)?\.json$|vercel\.json$)'
+    changed_service_files="$(jq -r --arg paths "$service_paths" '.files[].filename | select(test($paths))' <<< "$compare_response")"
+    compared_file_count="$(jq '.files | length' <<< "$compare_response")"
+    if [[ "$compare_status" != "ahead" && "$compare_status" != "identical" ]]; then
+      echo "FAIL  Setup service revision is not an ancestor of main: $service_revision ($compare_status)" >&2
+      failures=$((failures + 1))
+    elif [[ -n "$changed_service_files" ]]; then
+      echo "FAIL  Setup service is behind service-relevant changes on main:" >&2
+      sed 's/^/      /' <<< "$changed_service_files" >&2
+      failures=$((failures + 1))
+    elif ((compared_file_count >= 300)); then
+      echo "FAIL  Setup service drift comparison reached GitHub's 300-file limit." >&2
+      failures=$((failures + 1))
+    else
+      echo "PASS  Setup service revision covers current service inputs ($service_revision)"
+    fi
+  else
+    echo "FAIL  Setup service revision is not available in $repository." >&2
+    failures=$((failures + 1))
+  fi
+else
+  echo "FAIL  Setup service did not report a complete deployed revision." >&2
+  failures=$((failures + 1))
+fi
 
 if ((failures > 0)); then
   echo "Repository policy audit found $failures configuration mismatch(es)." >&2
