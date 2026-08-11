@@ -477,7 +477,7 @@ test("keeps unowned games in a searchable wish list and out of roulette", async 
   const issueUrl = new URL(openedRequest.url);
   expect(issueUrl.searchParams.get("template")).toBe("game-request.yml");
   expect(issueUrl.searchParams.get("game-name")).toBe("Sky Team");
-  expect(issueUrl.searchParams.get("bgg-id")).toBe("373106");
+  expect(issueUrl.searchParams.get("game-source")).toBe("373106");
   expect(issueUrl.searchParams.get("reasons")).toBe(
     "A cooperative two-player game would fit weeknights."
   );

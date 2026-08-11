@@ -79,8 +79,9 @@ questionnaire interface or its styles.
 
 ## Mutation boundaries
 
-Routine maintenance begins with a prefilled GitHub issue. Approved automation applies exactly one
-validated transaction to a branch and opens a pull request. It cannot approve or merge.
+Routine inventory and wish-list maintenance begins with a prefilled GitHub issue. Approved
+automation applies exactly one validated transaction to the corresponding canonical YAML file on a
+branch and opens a pull request. It cannot approve or merge.
 
 Guided Setup uses a separate service because GitHub Pages cannot safely hold credentials. The
 service verifies collaborator access with a short-lived GitHub App user token, immediately revokes

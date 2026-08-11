@@ -25,6 +25,8 @@ describe("maintenance input helpers", () => {
       sourceUrl: "https://publisher.example/local-game"
     });
     expect(parseGameSource("publisher page")).toEqual({ bggId: "", sourceUrl: "" });
+    expect(parseGameSource("0")).toEqual({ bggId: "", sourceUrl: "" });
+    expect(parseGameSource("javascript:alert(1)")).toEqual({ bggId: "", sourceUrl: "" });
   });
 });
 
@@ -69,8 +71,7 @@ describe("maintenance request links", () => {
 describe("wishlist request links", () => {
   it("opens the game-request issue form with only supplied fields", () => {
     const url = buildWishlistIssueUrl("https://github.com/Bahbus/GameNightLibrary", {
-      bggId: "",
-      sourceUrl: "",
+      source: "68448",
       name: "Sky Team",
       reasons: "A cooperative two-player game would fit weeknights.",
       notes: ""
@@ -78,7 +79,6 @@ describe("wishlist request links", () => {
     expect(url).toContain("template=game-request.yml");
     expect(url).toContain("game-name=Sky+Team");
     expect(url).toContain("reasons=A+cooperative+two-player+game+would+fit+weeknights.");
-    expect(url).not.toContain("bgg-id");
-    expect(url).not.toContain("source-url");
+    expect(url).toContain("game-source=68448");
   });
 });

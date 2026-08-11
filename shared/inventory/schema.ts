@@ -235,6 +235,7 @@ export const wishlistSchema = z
   .superRefine((wishlist, context) => {
     const slugs = new Set<string>();
     const bggIds = new Set<number>();
+    const sourceUrls = new Set<string>();
     wishlist.games.forEach((game, index) => {
       if (slugs.has(game.slug)) {
         context.addIssue({
@@ -250,8 +251,16 @@ export const wishlistSchema = z
           path: ["games", index, "bggId"]
         });
       }
+      if (game.sourceUrl && sourceUrls.has(game.sourceUrl)) {
+        context.addIssue({
+          code: "custom",
+          message: `Duplicate wishlist source URL: ${game.sourceUrl}`,
+          path: ["games", index, "sourceUrl"]
+        });
+      }
       slugs.add(game.slug);
       if (game.bggId !== undefined) bggIds.add(game.bggId);
+      if (game.sourceUrl) sourceUrls.add(game.sourceUrl);
     });
   });
 

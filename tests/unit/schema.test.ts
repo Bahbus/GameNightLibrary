@@ -51,6 +51,15 @@ describe("wishlist schema", () => {
         games: [{ slug: "unlinked", name: "Unlinked" }]
       })
     ).toThrow(/bggId or sourceUrl/);
+    expect(() =>
+      parseWishlist({
+        version: 1,
+        games: [
+          { slug: "first", sourceUrl: "https://example.test/game", name: "First" },
+          { slug: "second", sourceUrl: "https://example.test/game", name: "Second" }
+        ]
+      })
+    ).toThrow(/Duplicate wishlist source URL/);
   });
 });
 

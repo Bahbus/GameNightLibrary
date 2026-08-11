@@ -103,6 +103,29 @@ describe("catalog generation", () => {
     ).rejects.toThrow(/already owned/);
   });
 
+  it("rejects a wish-list source URL that is already owned", async () => {
+    const sourceUrl = "https://publisher.example/shared-game";
+    await expect(
+      buildCatalogPayload({
+        inventory: {
+          ...inventory,
+          games: inventory.games.map((game) => ({ ...game, sourceUrl }))
+        },
+        wishlist: {
+          version: 1,
+          games: [
+            {
+              slug: "other-slug",
+              sourceUrl,
+              name: "Already Owned",
+              status: "interested"
+            }
+          ]
+        }
+      })
+    ).rejects.toThrow(/source URL is already owned/);
+  });
+
   it("preserves the previous catalog when enrichment fails", async () => {
     const directory = await mkdtemp(join(tmpdir(), "board-game-catalog-"));
     const output = pathToFileURL(join(directory, "catalog.json"));

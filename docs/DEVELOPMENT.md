@@ -50,7 +50,7 @@ configuration.
 | `npm run check`                                       | Formatting, lint, strict TypeScript, unit tests, app build, and service build    |
 | `npm run test:e2e`                                    | Desktop, wide, and phone Chromium behavior and automated accessibility           |
 | `npm run lighthouse`                                  | Representative phone performance, accessibility, best practices, and SEO budgets |
-| `npm run inventory:validate`                          | Canonical ownership schema and relationships                                     |
+| `npm run inventory:validate`                          | Canonical inventory, wish-list, and ownership relationships                      |
 | `npm run repository:audit -- Bahbus/GameNightLibrary` | Read-only comparison of live GitHub settings to policy                           |
 
 Run the first three before opening a code or UI pull request. Inventory-only changes should also run

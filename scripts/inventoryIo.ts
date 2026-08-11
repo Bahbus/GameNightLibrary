@@ -37,7 +37,9 @@ export async function writeWishlist(wishlist: Wishlist, path = WISHLIST_PATH) {
     lineWidth: 0,
     sortMapEntries: false
   });
-  await writeFile(path, source, "utf8");
+  const temporary = new URL(`${path.href}.tmp`);
+  await writeFile(temporary, source, "utf8");
+  await rename(temporary, path);
 }
 
 export function formatZodError(error: unknown): string {

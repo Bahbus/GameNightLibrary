@@ -1,10 +1,12 @@
-import { formatZodError, readInventory } from "./inventoryIo";
+import { buildCatalogPayload } from "./catalogGeneration";
+import { formatZodError, readInventory, readWishlist } from "./inventoryIo";
 
 try {
-  const inventory = await readInventory();
+  const [inventory, wishlist] = await Promise.all([readInventory(), readWishlist()]);
+  await buildCatalogPayload({ inventory, wishlist });
   const expansionCount = inventory.games.reduce((count, game) => count + game.expansions.length, 0);
   console.log(
-    `Inventory is valid: ${inventory.games.length} base games and ${expansionCount} expansions.`
+    `Library data is valid: ${inventory.games.length} base games, ${expansionCount} expansions, and ${wishlist.games.length} wish-list games.`
   );
 } catch (error) {
   console.error(formatZodError(error));

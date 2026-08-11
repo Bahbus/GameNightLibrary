@@ -14,17 +14,13 @@ body:
     validations:
       required: true
   - type: input
-    id: bgg-id
+    id: game-source
     attributes:
-      label: BGG ID
-      description: Optional numeric ID from the BoardGameGeek URL.
-      placeholder: "68448"
-  - type: input
-    id: source-url
-    attributes:
-      label: Source URL
-      description: Optional publisher, crowdfunding, or product page.
-      placeholder: https://publisher.example/game
+      label: BoardGameGeek ID or source URL
+      description: Enter a numeric BGG ID or a complete publisher, crowdfunding, or product URL.
+      placeholder: 68448 or https://publisher.example/game
+    validations:
+      required: true
   - type: textarea
     id: reasons
     attributes:

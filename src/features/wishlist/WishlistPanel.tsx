@@ -26,8 +26,7 @@ export function WishlistPanel({ games }: { games: CatalogWishlistGame[] }) {
     requestSource.trim() && !parsedSource.bggId && !parsedSource.sourceUrl
   );
   const requestUrl = buildWishlistIssueUrl(REPOSITORY_URL, {
-    bggId: parsedSource.bggId,
-    sourceUrl: parsedSource.sourceUrl,
+    source: parsedSource.bggId || parsedSource.sourceUrl,
     name: requestName,
     reasons: requestReasons,
     notes: requestNotes
@@ -167,8 +166,9 @@ export function WishlistPanel({ games }: { games: CatalogWishlistGame[] }) {
                 />
               </label>
               <label>
-                BoardGameGeek ID or product link <span class="optional-label">(optional)</span>
+                BoardGameGeek ID or product link
                 <input
+                  required
                   value={requestSource}
                   aria-invalid={sourceInvalid}
                   aria-describedby={sourceInvalid ? "wishlist-source-error" : undefined}
@@ -178,7 +178,7 @@ export function WishlistPanel({ games }: { games: CatalogWishlistGame[] }) {
               </label>
               {sourceInvalid && (
                 <p class="field-error" id="wishlist-source-error" role="alert">
-                  Enter a BoardGameGeek ID or a complete web address beginning with http:// or
+                  Enter a BoardGameGeek ID or a complete product address beginning with http:// or
                   https://.
                 </p>
               )}
