@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "preact/compat";
 import { useCallback, useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { ExternalLink } from "./ExternalLink";
 import { GameCard } from "./features/catalog/CatalogGameCard";
@@ -6,7 +7,6 @@ import { FilterPanel } from "./features/discovery/FilterPanel";
 import { Maintenance } from "./features/maintenance/Maintenance";
 import { Roulette } from "./features/roulette/Roulette";
 import { WishlistPanel } from "./features/wishlist/WishlistPanel";
-import { SetupAccessGate } from "./SetupAccessGate";
 import { SiteFooter } from "./SiteFooter";
 import { buildAppUrl, parseAppView, type AppView } from "./lib/appNavigation";
 import { createStandalonePlayModes, filterAndScore, sortScoredGames } from "./lib/catalog";
@@ -16,6 +16,11 @@ import type { CatalogPayload, GroupPreferences, SortKey } from "./types";
 const STORAGE_KEY = "board-game-inventory:preferences:v1";
 const DRAWN_KEY = "board-game-inventory:drawn:v1";
 const REPOSITORY_URL = __GITHUB_REPOSITORY_URL__;
+const SetupAccessGate = lazy(() =>
+  import("./features/setup/SetupAccessGate").then(({ SetupAccessGate }) => ({
+    default: SetupAccessGate
+  }))
+);
 
 const viewTitles: Record<AppView, string> = {
   library: "Library | Game Night Library",
@@ -361,7 +366,17 @@ export function App() {
 
         {view === "maintain" && <Maintenance games={payload?.games ?? []} />}
 
-        {view === "setup" && <SetupAccessGate />}
+        {view === "setup" && (
+          <Suspense
+            fallback={
+              <section class="setup-loading" aria-busy="true">
+                <span role="status">Opening secure setup…</span>
+              </section>
+            }
+          >
+            <SetupAccessGate />
+          </Suspense>
+        )}
       </main>
 
       <SiteFooter refreshedAt={payload?.refreshedAt} />

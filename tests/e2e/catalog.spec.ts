@@ -61,6 +61,23 @@ test.beforeEach(async ({ page }) => {
   await page.goto("/");
 });
 
+test("loads the private Setup interface only when it is opened", async ({ page }) => {
+  const setupResources = () =>
+    page.evaluate(() =>
+      globalThis.performance
+        .getEntriesByType("resource")
+        .map((entry) => entry.name)
+        .filter((name) => name.includes("SetupAccessGate"))
+    );
+
+  expect(await setupResources()).toEqual([]);
+  await page.getByRole("button", { name: "Setup", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "Collaborator verification required" })
+  ).toBeVisible();
+  await expect.poll(async () => (await setupResources()).length).toBeGreaterThan(0);
+});
+
 test("credits BGG with its official linked mark and explains local inferences", async ({
   page
 }) => {
