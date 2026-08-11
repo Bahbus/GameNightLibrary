@@ -6,7 +6,7 @@ import {
 } from "../../src/lib/preferences";
 
 describe("shareable preferences", () => {
-  it("round-trips versioned state", () => {
+  it("round-trips shareable state without a schema marker", () => {
     const expected = {
       ...DEFAULT_PREFERENCES,
       players: 6,
@@ -16,11 +16,16 @@ describe("shareable preferences", () => {
       targetComplexity: 2.5,
       learnedOnly: true
     };
-    expect(parsePreferences(serializePreferences(expected))).toEqual(expected);
+    const serialized = serializePreferences(expected);
+    expect(serialized).not.toContain("v=");
+    expect(parsePreferences(serialized)).toEqual(expected);
   });
 
-  it("falls back safely for an unknown schema version", () => {
-    expect(parsePreferences("v=999&players=6")).toEqual(DEFAULT_PREFERENCES);
+  it("ignores unrelated query parameters", () => {
+    expect(parsePreferences("campaign=summer&players=6")).toEqual({
+      ...DEFAULT_PREFERENCES,
+      players: 6
+    });
   });
 
   it("round-trips the solo mode filter", () => {

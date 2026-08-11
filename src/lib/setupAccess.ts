@@ -1,6 +1,8 @@
-const SESSION_KEY = "board-game-inventory:setup-access:v1";
-const NONCE_KEY = "board-game-inventory:setup-auth-nonce:v1";
-const VERIFIER_KEY = "board-game-inventory:setup-pkce-verifier:v1";
+import { BROWSER_STORAGE_KEYS } from "./browserStorage";
+
+const SESSION_KEY = BROWSER_STORAGE_KEYS.setupAccess;
+const NONCE_KEY = BROWSER_STORAGE_KEYS.setupAuthNonce;
+const VERIFIER_KEY = BROWSER_STORAGE_KEYS.setupAuthVerifier;
 
 export interface SetupAccessSession {
   grant: string;
@@ -37,6 +39,14 @@ interface StorageRemover {
   removeItem(key: string): void;
 }
 
+const safelyRemove = (storage: StorageRemover, key: string) => {
+  try {
+    storage.removeItem(key);
+  } catch {
+    // Verification can restart when session storage is unavailable.
+  }
+};
+
 const isLocalHttp = (url: URL) =>
   url.protocol === "http:" && (url.hostname === "127.0.0.1" || url.hostname === "localhost");
 
@@ -57,11 +67,14 @@ export const parseSetupServiceUrl = (value: string | undefined): URL | undefined
 };
 
 export const readSetupAccessSession = (
-  storage: StorageReader = globalThis.sessionStorage
+  storage: StorageReader & StorageRemover = globalThis.sessionStorage
 ): SetupAccessSession | undefined => {
   try {
     const value = JSON.parse(storage.getItem(SESSION_KEY) ?? "null") as unknown;
-    if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
+    if (!value || typeof value !== "object" || Array.isArray(value)) {
+      safelyRemove(storage, SESSION_KEY);
+      return undefined;
+    }
     const candidate = value as Record<string, unknown>;
     if (
       typeof candidate.grant !== "string" ||
@@ -71,6 +84,7 @@ export const readSetupAccessSession = (
       typeof candidate.expiresAt !== "string" ||
       !Number.isFinite(Date.parse(candidate.expiresAt))
     ) {
+      safelyRemove(storage, SESSION_KEY);
       return undefined;
     }
     return {
@@ -79,6 +93,7 @@ export const readSetupAccessSession = (
       expiresAt: candidate.expiresAt
     };
   } catch {
+    safelyRemove(storage, SESSION_KEY);
     return undefined;
   }
 };

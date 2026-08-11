@@ -25,26 +25,31 @@ export function Cover({ game }: { game: CatalogGame }) {
 
 export function GameCard({
   entry,
-  onInspect
+  onInspect,
+  demo = false
 }: {
   entry: ScoredGame;
   onInspect: (trigger: HTMLButtonElement) => void;
+  demo?: boolean;
 }) {
   const { game } = entry;
   const values = effectiveValues(game);
   const overridden = Boolean(game.overrides && Object.keys(game.overrides).length);
 
   return (
-    <article class="game-card">
+    <article class={`game-card${demo ? " is-demo" : ""}`}>
       <div class="cover-wrap">
         <Cover game={game} />
         <span class="match-pill">{Math.round(entry.matchScore * 100)}% match</span>
+        {demo && <span class="demo-pill">Demo</span>}
       </div>
       <div class="card-content">
         <div class="card-title-row">
           <div>
             <span class="eyebrow">
-              {game.metadata.yearPublished ?? "Year unknown"} · Shelf {game.shelf ?? "unassigned"}
+              {demo
+                ? "Fictional example"
+                : `${game.metadata.yearPublished ?? "Year unknown"} · Shelf ${game.shelf ?? "unassigned"}`}
             </span>
             <h3>{game.name}</h3>
           </div>
@@ -93,26 +98,28 @@ export function GameCard({
           >
             Details
           </button>
-          {game.metadata.url && (
+          {!demo && game.metadata.url && (
             <ExternalLink href={game.metadata.url}>
               {game.bggId ? "View on BoardGameGeek" : "View product source"}
             </ExternalLink>
           )}
-          <ExternalLink
-            href={buildIssueUrl(REPOSITORY_URL, {
-              operation: "update",
-              bggId: game.bggId?.toString() ?? "",
-              sourceUrl: game.sourceUrl ?? "",
-              name: game.name,
-              slug: game.slug,
-              parentId: "",
-              parentSlug: "",
-              modes: "",
-              notes: ""
-            })}
-          >
-            Suggest edit
-          </ExternalLink>
+          {!demo && (
+            <ExternalLink
+              href={buildIssueUrl(REPOSITORY_URL, {
+                operation: "update",
+                bggId: game.bggId?.toString() ?? "",
+                sourceUrl: game.sourceUrl ?? "",
+                name: game.name,
+                slug: game.slug,
+                parentId: "",
+                parentSlug: "",
+                modes: "",
+                notes: ""
+              })}
+            >
+              Suggest edit
+            </ExternalLink>
+          )}
         </div>
       </div>
     </article>

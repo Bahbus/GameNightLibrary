@@ -1,7 +1,6 @@
 import type { GroupPreferences } from "../types";
 
 export const DEFAULT_PREFERENCES: GroupPreferences = {
-  version: 1,
   query: "",
   requiredMode: "",
   maxTableSpace: "",
@@ -30,7 +29,6 @@ const optionalNumber = (value: string | null) => {
 
 export function serializePreferences(preferences: GroupPreferences): string {
   const params = new URLSearchParams();
-  params.set("v", "1");
   if (preferences.query) params.set("q", preferences.query);
   if (preferences.players) params.set("players", String(preferences.players));
   if (preferences.maxMinutes) params.set("max", String(preferences.maxMinutes));
@@ -61,7 +59,6 @@ export function serializePreferences(preferences: GroupPreferences): string {
 
 export function parsePreferences(search: string): GroupPreferences {
   const params = new URLSearchParams(search.startsWith("?") ? search.slice(1) : search);
-  if (params.get("v") !== "1") return { ...DEFAULT_PREFERENCES };
   const validModes = ["competitive", "cooperative", "team", "solo"];
   const validSpaces = ["compact", "standard", "large"];
   const validSorts = ["name", "bggRating", "complexity", "duration", "players", "houseRating"];

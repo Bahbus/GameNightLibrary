@@ -337,6 +337,23 @@ h1 em {
   color: #673b00;
 }
 
+.demo-banner {
+  display: flex;
+  align-items: baseline;
+  gap: 0.45rem 0.8rem;
+  margin: 1rem 0;
+  padding: 0.62rem 1rem;
+  border: 1px solid #7b5aa9;
+  border-radius: 0.75rem;
+  color: #39245b;
+  background: #f1eaff;
+  font-size: 0.82rem;
+}
+
+.demo-banner strong {
+  flex: none;
+}
+
 .filter-panel {
   position: relative;
   z-index: 3;
@@ -569,6 +586,20 @@ output {
   font-weight: 800;
 }
 
+.demo-pill {
+  position: absolute;
+  left: 0.75rem;
+  top: 0.75rem;
+  padding: 0.3rem 0.65rem;
+  border-radius: 999px;
+  color: white;
+  background: var(--purple-dark);
+  font-size: 0.7rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 .card-content {
   padding: 0.85rem 1.1rem;
 }
@@ -721,6 +752,16 @@ output {
 .inspector-edition {
   color: #6c6176;
   font-size: 0.8rem;
+}
+
+.demo-notice {
+  margin: 0.7rem 0 0;
+  padding: 0.6rem 0.7rem;
+  border-left: 3px solid var(--purple);
+  color: #5d4d6b;
+  background: #f6f0ff;
+  font-size: 0.78rem;
+  line-height: 1.45;
 }
 
 .inspector-stats {
@@ -1629,6 +1670,11 @@ footer p {
 }
 
 @media (max-width: 700px) {
+  .demo-banner {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
   .game-inspector {
     inset: 0.5rem;
     width: auto;
@@ -1811,6 +1857,7 @@ footer p {
 
   .tag,
   .match-pill,
+  .demo-pill,
   .wishlist-badges span {
     border: 1px solid CanvasText;
   }

@@ -46,12 +46,21 @@ not BGG-supplied facts.
 
 The Preact application performs these operations locally:
 
-- parse and serialize versioned shareable preferences;
+- parse and serialize compact shareable preferences without a permanent URL version marker;
 - apply hard requirements;
 - calculate normalized soft-preference match scores;
 - sort and search eligible games;
 - select roulette results with `crypto.getRandomValues`;
-- store the latest unnamed settings and roulette exclusions in browser storage.
+- store the latest unnamed settings and roulette exclusions in current-format browser storage;
+- retain in-progress Setup answers for at most 30 days and only for the questionnaire revision that
+  created them;
+- provide a browser-only fictional demo catalog while Setup is required and the authored catalog is
+  empty.
+
+Browser state is intentionally current-only. Obsolete storage keys are deleted when the application
+starts, malformed values fall back safely, and Setup progress is cleared after submission or after a
+deployment reports Setup complete. No migration or backward-compatibility layer is maintained for
+pre-launch browser state or old share links.
 
 The browser never receives the BGG API token, GitHub App private key, client secret, installation
 token, or service signing key. It does not directly write repository contents.
