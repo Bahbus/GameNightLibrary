@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { SETUP_TIME_RANGE_VALUES } from "./houseOptions";
+import { SETUP_TIME_RANGE_VALUES } from "../../shared/setup/houseOptions";
 import type { Inventory, Wishlist } from "../types";
 
 const availabilitySchema = z.enum(["available", "loaned", "incomplete", "unavailable"]);

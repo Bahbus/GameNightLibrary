@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { describe, expect, it } from "vitest";
-import { csvRecords, parseCsv } from "../../scripts/csv";
+import { csvRecords, parseCsv } from "../../shared/csv";
 
 const intakePath = "data/inventory.intake.csv";
 

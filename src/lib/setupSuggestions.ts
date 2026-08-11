@@ -1,5 +1,9 @@
 import type { BggMetadata } from "../types";
-import { ACCESSIBILITY_OPTIONS, CONTENT_OPTIONS, MOOD_OPTIONS } from "./houseOptions";
+import {
+  ACCESSIBILITY_OPTIONS,
+  CONTENT_OPTIONS,
+  MOOD_OPTIONS
+} from "../../shared/setup/houseOptions";
 
 export interface HowItPlaysSuggestion {
   slug: string;

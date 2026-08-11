@@ -1,4 +1,4 @@
-import { csvRecords, parseCsv, recordsToCsv } from "./csv.js";
+import { csvRecords, parseCsv, recordsToCsv } from "../shared/csv.js";
 
 export const INTAKE_HEADERS = [
   "include",

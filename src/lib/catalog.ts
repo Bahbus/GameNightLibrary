@@ -6,7 +6,7 @@ import type {
   ScoredGame,
   TableSpace
 } from "../types";
-import { setupTimeComparisonMinutes } from "./houseOptions";
+import { setupTimeComparisonMinutes } from "../../shared/setup/houseOptions";
 
 const TABLE_SPACE_RANK: Record<TableSpace, number> = {
   compact: 1,

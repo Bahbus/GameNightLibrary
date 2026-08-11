@@ -9,8 +9,8 @@ import type {
   ValueOverrides
 } from "../src/types";
 import { parseInventory } from "../src/lib/schema";
-import { SETUP_TIME_RANGE_VALUES } from "../src/lib/houseOptions";
-import { csvRecords } from "./csv";
+import { SETUP_TIME_RANGE_VALUES } from "../shared/setup/houseOptions";
+import { csvRecords } from "../shared/csv";
 
 const list = (value: string) =>
   value

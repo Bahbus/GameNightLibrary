@@ -1,8 +1,8 @@
 export type Availability = "available" | "loaned" | "incomplete" | "unavailable";
 export type TableSpace = "compact" | "standard" | "large";
 export type GameMode = "competitive" | "cooperative" | "team" | "solo";
-export type { SetupTimeRange } from "./lib/houseOptions";
-import type { SetupTimeRange } from "./lib/houseOptions";
+export type { SetupTimeRange } from "../shared/setup/houseOptions";
+import type { SetupTimeRange } from "../shared/setup/houseOptions";
 export type SortKey = "name" | "bggRating" | "complexity" | "duration" | "players" | "houseRating";
 
 export interface ValueOverrides {

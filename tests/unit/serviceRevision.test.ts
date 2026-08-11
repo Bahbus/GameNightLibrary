@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { createServiceRevision, serializeServiceRevision } from "../../scripts/serviceRevision";
+import {
+  createServiceRevision,
+  serializeServiceRevision
+} from "../../shared/setup/serviceRevision";
 
 describe("Setup service revision", () => {
   const revision = "8606a0331a01ba681b7140f493907f7906ce4150";
