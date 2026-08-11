@@ -1,4 +1,4 @@
-FROM node:24.17.0-alpine3.24 AS build
+FROM node:26.7.0-alpine3.24 AS build
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
@@ -6,7 +6,7 @@ COPY service ./service
 COPY shared ./shared
 RUN npm run service:build
 
-FROM node:24.17.0-alpine3.24 AS runtime
+FROM node:26.7.0-alpine3.24 AS runtime
 ENV HOST=0.0.0.0
 ENV NODE_ENV=production
 ENV PORT=8787
