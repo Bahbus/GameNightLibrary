@@ -16,7 +16,11 @@ jobs:
     name: mark public suggestion
     if: >-
       github.event.action == 'opened' &&
-      contains(join(github.event.issue.labels.*.name, ','), 'inventory:') &&
+      (
+        contains(github.event.issue.labels.*.name, 'inventory:add') ||
+        contains(github.event.issue.labels.*.name, 'inventory:update') ||
+        contains(github.event.issue.labels.*.name, 'inventory:remove')
+      ) &&
       !contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.issue.author_association)
     runs-on: ubuntu-latest
     permissions:
@@ -35,9 +39,16 @@ jobs:
   prepare-pull-request:
     name: prepare pull request
     if: >-
-      contains(join(github.event.issue.labels.*.name, ','), 'inventory:') &&
       (
-        contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.issue.author_association) ||
+        contains(github.event.issue.labels.*.name, 'inventory:add') ||
+        contains(github.event.issue.labels.*.name, 'inventory:update') ||
+        contains(github.event.issue.labels.*.name, 'inventory:remove')
+      ) &&
+      (
+        (
+          github.event.action == 'opened' &&
+          contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.issue.author_association)
+        ) ||
         (
           github.event.action == 'labeled' &&
           github.event.label.name == 'approved-inventory-change'
@@ -67,12 +78,12 @@ jobs:
         env:
           EVENT_PATH: ${{ github.event_path }}
         run: |
-          labels="$(jq -r '[.issue.labels[].name] | join(",")' "$EVENT_PATH")"
-          if [[ "$labels" == *"inventory:add"* ]]; then operation=add
-          elif [[ "$labels" == *"inventory:update"* ]]; then operation=update
-          elif [[ "$labels" == *"inventory:remove"* ]]; then operation=remove
-          else echo "No inventory operation label found." >&2; exit 1
+          operations="$(jq -c '[.issue.labels[].name | select(. == "inventory:add" or . == "inventory:update" or . == "inventory:remove")]' "$EVENT_PATH")"
+          if [[ "$(jq 'length' <<< "$operations")" != "1" ]]; then
+            echo "Exactly one inventory operation label is required; found: $operations" >&2
+            exit 1
           fi
+          operation="$(jq -r '.[0] | sub("^inventory:"; "")' <<< "$operations")"
           echo "operation=$operation" >> "$GITHUB_OUTPUT"
       - name: Reject an existing automation branch
         env:

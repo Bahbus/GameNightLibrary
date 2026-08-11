@@ -151,6 +151,12 @@ This keeps GitHub access limited to the dedicated, repository-scoped Game Night 
 4. Confirm that `GET /healthz` returns `{"status":"ok"}`, `GET /revision.json` identifies the
    intended full Git commit SHA, and the root page identifies the service.
 
+The read-only repository audit compares that revision with `main` and fails when a newer commit
+changed a service runtime input. A revision can therefore be older than the latest UI or
+documentation commit without producing a false drift warning. After merging service, shared Setup,
+dependency, container, TypeScript-service, or Vercel configuration changes, redeploy from current
+`main` and rerun `npm run repository:audit`.
+
 The committed `vercel.json` selects the service-only build. `api/index.ts` exports the Express
 application through Vercel's supported entry-point convention, while `service-static/` supplies a
 small provider-neutral landing page and `.vercel/` remains ignored local provider state. Keep the
