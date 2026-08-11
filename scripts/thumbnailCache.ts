@@ -1,7 +1,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import type { CatalogMetadata, CatalogPayload } from "../src/types";
+import type { CatalogMetadata, CatalogPayload } from "../shared/catalog/types.js";
 
 const MAX_THUMBNAIL_BYTES = 2 * 1024 * 1024;
 const extensions = new Map([

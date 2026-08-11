@@ -1,7 +1,7 @@
 import { readFile, rename, writeFile } from "node:fs/promises";
 import YAML from "yaml";
-import { parseInventory, parseWishlist } from "../src/lib/schema";
-import type { Inventory, Wishlist } from "../src/types";
+import { parseInventory, parseWishlist } from "../shared/inventory/schema.js";
+import type { Inventory, Wishlist } from "../shared/inventory/types.js";
 
 export const INVENTORY_PATH = new URL("../data/inventory.yaml", import.meta.url);
 export const WISHLIST_PATH = new URL("../data/wishlist.yaml", import.meta.url);

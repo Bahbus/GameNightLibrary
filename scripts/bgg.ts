@@ -1,5 +1,6 @@
 import { XMLParser } from "fast-xml-parser";
-import type { BggMetadata, GameMode, PlayerRecommendation } from "../src/types";
+import type { BggMetadata, PlayerRecommendation } from "../shared/catalog/types.js";
+import type { GameMode } from "../shared/inventory/types.js";
 
 const parser = new XMLParser({
   ignoreAttributes: false,

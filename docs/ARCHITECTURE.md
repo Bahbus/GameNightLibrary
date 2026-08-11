@@ -58,15 +58,19 @@ token, or service signing key. It does not directly write repository contents.
 
 ## Code ownership boundaries
 
-Reusable Setup contracts live under `shared/setup`. This layer owns questionnaire rows and CSV
-serialization, guided-answer options, and deployed-revision validation. The browser, setup service,
-and build scripts may depend on it, but it has no dependency on those consumers. Generic CSV
-parsing lives alongside it under `shared`.
+Reusable data contracts live under `shared`. `shared/inventory` owns the canonical inventory and
+wish-list types and validation. `shared/catalog` owns generated BGG and catalog payload types.
+`shared/setup` owns questionnaire rows and CSV serialization, guided-answer options and inference,
+and deployed-revision validation. The browser, setup service, and build scripts may depend on these
+domains, but shared code has no dependency on those consumers. Generic CSV parsing lives alongside
+them.
 
 Browser presentation remains under `src`, runtime HTTP and GitHub integration remain under
 `service`, and repository-maintenance commands remain under `scripts`. Script-only preparation,
 such as creating the initial house questionnaire from the matching manifest, stays in `scripts`
-while reusing the shared contract.
+while reusing shared contracts. Browser compatibility modules may re-export shared types and
+parsers, but repository scripts import their owning shared domain directly rather than depending on
+the browser tree.
 
 ## Mutation boundaries
 

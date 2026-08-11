@@ -9,7 +9,7 @@ import {
   inferHowItPlays,
   type HowItPlaysSuggestion,
   type SetupSuggestionsPayload
-} from "../src/lib/setupSuggestions";
+} from "../shared/setup/setupSuggestions.js";
 
 export const gitBlobSha = (source: string) => {
   const bytes = new TextEncoder().encode(source);
