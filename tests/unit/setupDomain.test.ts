@@ -34,4 +34,13 @@ describe("shared setup domain", () => {
 
     expect(config.include).toEqual(["api/index.ts", "service", "shared"]);
   });
+
+  it("copies shared contracts into the container build before bundling the service", async () => {
+    const dockerfile = await readFile("Dockerfile", "utf8");
+    const sharedCopy = dockerfile.indexOf("COPY shared ./shared");
+    const serviceBuild = dockerfile.indexOf("RUN npm run service:build");
+
+    expect(sharedCopy).toBeGreaterThanOrEqual(0);
+    expect(sharedCopy).toBeLessThan(serviceBuild);
+  });
 });

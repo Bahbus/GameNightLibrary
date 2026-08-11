@@ -4,6 +4,7 @@ COPY package.json package-lock.json ./
 RUN npm ci --legacy-peer-deps
 COPY service ./service
 COPY scripts ./scripts
+COPY shared ./shared
 RUN npm run service:build
 
 FROM node:24-alpine AS runtime
