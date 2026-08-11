@@ -38,6 +38,7 @@ describe("maintenance request links", () => {
       slug: "7-wonders",
       parentId: "",
       parentSlug: "",
+      modes: "",
       notes: ""
     });
     expect(url).toContain("template=inventory-add.yml");
@@ -55,10 +56,12 @@ describe("maintenance request links", () => {
       slug: "local-game",
       parentId: "",
       parentSlug: "",
+      modes: "competitive;solo",
       notes: ""
     });
     expect(url).toContain("slug=local-game");
     expect(url).toContain("source-url=https%3A%2F%2Fpublisher.example%2Flocal-game");
+    expect(url).toContain("modes=competitive%3Bsolo");
     expect(url).not.toContain("bgg-id");
   });
 });

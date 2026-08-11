@@ -59,6 +59,12 @@ House values describe this collection rather than the general game:
 - moods, accessibility flags, content flags, and recommendation notes;
 - optional player, duration, age, or mode overrides.
 
+A base game without a BGG ID must include a public product source, complete player/time/age
+filter values, and at least one supported mode. The site asks for its modes before opening the add
+request. A non-standalone local expansion inherits its base game's eligibility context. If a
+local-only product can be played independently, add it as a base game so it can carry its own modes
+and filter values.
+
 Prefer an override only when the owned edition or local experience materially differs from BGG
 metadata. The UI shows both BGG and house values and identifies which one controls eligibility.
 

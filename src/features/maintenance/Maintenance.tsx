@@ -1,8 +1,14 @@
 import { useMemo, useState } from "preact/hooks";
 import { buildIssueUrl, parseGameSource, slugifyGameName } from "../../lib/maintenance";
-import type { CatalogGame } from "../../types";
+import type { CatalogGame, GameMode } from "../../types";
 
 const REPOSITORY_URL = __GITHUB_REPOSITORY_URL__;
+const modeOptions = [
+  ["competitive", "Competitive"],
+  ["cooperative", "Cooperative"],
+  ["solo", "Solo"],
+  ["team", "Teams"]
+] as const satisfies readonly (readonly [GameMode, string])[];
 
 const operationCopy = {
   add: {
@@ -30,6 +36,7 @@ export function Maintenance({ games }: { games: CatalogGame[] }) {
   const [isExpansion, setIsExpansion] = useState(false);
   const [parentSlug, setParentSlug] = useState("");
   const [selectedSlug, setSelectedSlug] = useState("");
+  const [modes, setModes] = useState<GameMode[]>([]);
   const [notes, setNotes] = useState("");
 
   const inventoryItems = useMemo(
@@ -57,6 +64,7 @@ export function Maintenance({ games }: { games: CatalogGame[] }) {
   const sourceUrl = operation === "add" ? parsedSource.sourceUrl : "";
   const sourceInvalid = Boolean(source.trim() && !parsedSource.bggId && !parsedSource.sourceUrl);
   const parentId = operation === "add" && isExpansion ? String(parent?.bggId ?? "") : "";
+  const needsLocalModes = operation === "add" && !isExpansion && Boolean(sourceUrl);
   const selectedOperation = operationCopy[operation];
 
   const changeOperation = (next: "add" | "update" | "remove") => {
@@ -73,9 +81,22 @@ export function Maintenance({ games }: { games: CatalogGame[] }) {
       slug,
       parentId,
       parentSlug: operation === "add" && isExpansion ? parentSlug : "",
+      modes: needsLocalModes ? modes.join(";") : "",
       notes: operation === "add" ? notes : ""
     });
-  }, [operation, bggId, sourceUrl, requestName, slug, parentId, parentSlug, isExpansion, notes]);
+  }, [
+    operation,
+    bggId,
+    sourceUrl,
+    requestName,
+    slug,
+    parentId,
+    parentSlug,
+    isExpansion,
+    needsLocalModes,
+    modes,
+    notes
+  ]);
 
   return (
     <section class="maintenance-card">
@@ -188,6 +209,35 @@ export function Maintenance({ games }: { games: CatalogGame[] }) {
                   </select>
                 </label>
               )}
+              {needsLocalModes && (
+                <fieldset class="maintenance-modes wide">
+                  <legend>How can this game be played?</legend>
+                  <p>
+                    Choose every supported mode. This is required because BoardGameGeek cannot
+                    supply metadata for this game.
+                  </p>
+                  <div>
+                    {modeOptions.map(([value, label]) => (
+                      <label class="check-control" key={value}>
+                        <input
+                          type="checkbox"
+                          name="modes"
+                          value={value}
+                          checked={modes.includes(value)}
+                          onChange={(event) =>
+                            setModes((current) =>
+                              event.currentTarget.checked
+                                ? [...current, value]
+                                : current.filter((mode) => mode !== value)
+                            )
+                          }
+                        />
+                        <span>{label}</span>
+                      </label>
+                    ))}
+                  </div>
+                </fieldset>
+              )}
               <label class="wide">
                 Ownership notes <span class="optional-label">(optional)</span>
                 <textarea
@@ -230,7 +280,11 @@ export function Maintenance({ games }: { games: CatalogGame[] }) {
             </label>
           )}
         </div>
-        <button class="primary-button" type="submit" disabled={sourceInvalid}>
+        <button
+          class="primary-button"
+          type="submit"
+          disabled={sourceInvalid || (needsLocalModes && modes.length === 0)}
+        >
           {selectedOperation.action} <span aria-hidden="true">↗</span>
           <span class="sr-only"> in a new tab</span>
         </button>

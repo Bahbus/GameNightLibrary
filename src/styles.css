@@ -1324,6 +1324,38 @@ output {
   line-height: 1.35;
 }
 
+.maintenance-modes {
+  margin: 0;
+  padding: 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+}
+
+.maintenance-modes legend {
+  padding: 0 0.3rem;
+  color: var(--ink);
+  font-weight: 800;
+}
+
+.maintenance-modes > p {
+  margin: 0 0 0.65rem;
+  color: #786e81;
+  font-size: 0.72rem;
+}
+
+.maintenance-modes > div {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.maintenance-modes .check-control {
+  min-width: 0;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid var(--line);
+  border-radius: 0.65rem;
+}
+
 .maintenance-technical {
   border-top: 1px solid var(--line);
   padding-top: 0.65rem;
@@ -2110,7 +2142,8 @@ footer p {
 
   .rating-grid,
   .local-grid,
-  .setup-checkboxes {
+  .setup-checkboxes,
+  .maintenance-modes > div {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
