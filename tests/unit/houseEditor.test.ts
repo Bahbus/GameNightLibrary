@@ -60,17 +60,15 @@ describe("browser house editor", () => {
     expect(games.map((game) => game.title)).toEqual(["Alpha 2", "Alpha 10", "Zulu"]);
   });
 
-  it("accepts versioned stored progress and rejects malformed progress", () => {
+  it("accepts current stored progress and rejects malformed progress", () => {
     expect(
       parseSavedHouseProgress({
-        schemaVersion: 2,
         answers: { "example-game": { learned: "yes" } },
         completedSlugs: ["example-game"]
       }).completedSlugs
     ).toEqual(["example-game"]);
     expect(() =>
       parseSavedHouseProgress({
-        schemaVersion: 2,
         answers: [],
         completedSlugs: ["example-game"]
       })
@@ -79,7 +77,6 @@ describe("browser house editor", () => {
 
   it("merges saved answers without allowing identity fields to drift", () => {
     const [merged] = mergeHouseProgress([answer()], {
-      schemaVersion: 2,
       completedSlugs: ["example-game"],
       answers: {
         "example-game": {

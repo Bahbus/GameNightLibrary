@@ -6,11 +6,10 @@ import {
   houseAnswersToCsv,
   mergeHouseProgress,
   parseHouseEditorDataset,
-  parseSavedHouseProgress,
   validateHouseAnswer,
-  type HouseAnswer,
-  type SavedHouseProgress
+  type HouseAnswer
 } from "../../lib/houseEditor";
+import { clearSetupProgress, readSetupProgress, storeSetupProgress } from "../../lib/setupProgress";
 import {
   SetupVerificationError,
   submitHouseAnswers,
@@ -21,18 +20,6 @@ import {
   parseSetupSuggestions,
   type HowItPlaysSuggestion
 } from "../../lib/setupSuggestions";
-
-const STORAGE_KEY = "board-game-inventory:house-progress:v2";
-
-const readProgress = (): SavedHouseProgress => {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (!saved) return EMPTY_PROGRESS;
-    return parseSavedHouseProgress(JSON.parse(saved) as unknown);
-  } catch {
-    return EMPTY_PROGRESS;
-  }
-};
 
 const download = (name: string, content: string, type: string) => {
   const url = URL.createObjectURL(new window.Blob([content], { type }));
@@ -52,10 +39,13 @@ export function HouseEditor({
   grant: string;
   onVerificationLost: () => void;
 }) {
+  const [storedProgress] = useState(readSetupProgress);
+  const storedSourceSha = useRef(storedProgress.sourceSha);
+  const progressDirty = useRef(false);
   const [sourceGames, setSourceGames] = useState<HouseAnswer[]>([]);
   const [sourceSha, setSourceSha] = useState("");
   const [suggestions, setSuggestions] = useState<Map<string, HowItPlaysSuggestion>>(new Map());
-  const [progress, setProgress] = useState<SavedHouseProgress>(readProgress);
+  const [progress, setProgress] = useState(storedProgress.progress);
   const [index, setIndex] = useState(0);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -107,6 +97,11 @@ export function HouseEditor({
           // The questionnaire remains usable when optional suggestions are unavailable.
         }
         if (!active) return;
+        if (storedSourceSha.current && storedSourceSha.current !== dataset.sourceSha) {
+          clearSetupProgress();
+          storedSourceSha.current = undefined;
+          setProgress({ ...EMPTY_PROGRESS, answers: {}, completedSlugs: [] });
+        }
         setSourceSha(dataset.sourceSha);
         setSuggestions(suggestionMap);
         setSourceGames(dataset.games);
@@ -125,13 +120,20 @@ export function HouseEditor({
   }, [grant, onVerificationLost, serviceUrl]);
 
   useEffect(() => {
+    if (!progressDirty.current || !sourceSha || submission) return;
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
+      storeSetupProgress(progress, sourceSha);
+      storedSourceSha.current = sourceSha;
+      progressDirty.current = false;
       setProgressSaved(true);
     } catch {
       setProgressSaved(false);
     }
-  }, [progress]);
+  }, [progress, sourceSha, submission]);
+
+  useEffect(() => {
+    if (submission) clearSetupProgress();
+  }, [submission]);
 
   const suggestedSourceGames = useMemo(
     () => sourceGames.map((game) => applyHowItPlaysSuggestion(game, suggestions.get(game.slug))),
@@ -176,6 +178,7 @@ export function HouseEditor({
 
   const update = <K extends keyof HouseAnswer>(key: K, value: HouseAnswer[K]) => {
     if (!current) return;
+    progressDirty.current = true;
     setProgress((previous) => ({
       ...previous,
       answers: {
@@ -225,6 +228,7 @@ export function HouseEditor({
       });
       return;
     }
+    progressDirty.current = true;
     setProgress((previous) => ({
       ...previous,
       completedSlugs: [...new Set([...previous.completedSlugs, current.slug])]
@@ -246,6 +250,7 @@ export function HouseEditor({
         `${houseAnswersToCsv(games)}\n`,
         sourceSha
       );
+      clearSetupProgress();
       setSubmission(result);
       setNoticeKind("status");
     } catch (cause) {

@@ -47,10 +47,7 @@ const allowSetup = async (page: import("@playwright/test").Page) => {
     })
   );
   await page.evaluate((session) => {
-    globalThis.sessionStorage.setItem(
-      "board-game-inventory:setup-access:v1",
-      JSON.stringify(session)
-    );
+    globalThis.sessionStorage.setItem("game-night-library:setup-access", JSON.stringify(session));
   }, setupSession);
 };
 
@@ -155,7 +152,7 @@ test("gives each primary view its own heading without repeating the library hero
 });
 
 test("supports deep links and browser history between primary views", async ({ page }) => {
-  await page.goto("/?v=1&players=6&view=wishlist");
+  await page.goto("/?players=6&view=wishlist");
   await expect(page.getByRole("heading", { level: 1, name: "Wish list & requests" })).toBeVisible();
 
   await page.getByRole("button", { name: "Roulette", exact: true }).click();
@@ -184,7 +181,7 @@ test("confirms when a shareable filter link is copied", async ({ page }) => {
 
   await expect(page.getByRole("button", { name: "Copied!" })).toBeVisible();
   expect(await page.evaluate(() => globalThis.sessionStorage.getItem("copied-share-link"))).toMatch(
-    /\?v=1&players=6$/
+    /\?players=6$/
   );
 
   await page.evaluate(() => {
@@ -631,7 +628,34 @@ test("labels external destinations and opens them safely", async ({ page }) => {
 test("supports the GitHub Pages repository path", async ({ page }) => {
   await page.goto(`/${activeRepositoryName}/`);
   await expect(page.getByRole("heading", { name: "3 games ready" })).toBeVisible();
-  await expect(page).toHaveURL(new RegExp(`/${activeRepositoryName}/\\?v=1`));
+  await expect(page).toHaveURL(new RegExp(`/${activeRepositoryName}/$`));
+});
+
+test("offers fictional examples only while an empty collection still needs Setup", async ({
+  page
+}) => {
+  await page.unroute("**/catalog.json");
+  await page.route("**/catalog.json", (route) =>
+    route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({ ...catalogFixture, games: [], setupRequired: true })
+    })
+  );
+  await page.reload();
+
+  await expect(page.getByText("You’re exploring fictional demo games.")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Clockwork Café" })).toBeVisible();
+  await expect(page.getByText("Fictional example").first()).toBeVisible();
+  await expect(page.getByRole("link", { name: /Suggest an edit/ })).toHaveCount(0);
+  await page.getByRole("button", { name: "Details" }).first().click();
+  await expect(
+    page.getByText("This fictional game is here so you can try the library")
+  ).toBeVisible();
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+  await page.getByRole("button", { name: /Close/ }).click();
+  await page.getByRole("button", { name: "Roulette", exact: true }).click();
+  await expect(page.getByText("You’re exploring fictional demo games.")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Spin the roulette" })).toBeVisible();
 });
 
 test("offers useful recovery when no game meets the requirements", async ({ page }) => {
@@ -648,7 +672,7 @@ test("guides an empty collection toward its first addition", async ({ page }) =>
   await page.route("**/catalog.json", (route) =>
     route.fulfill({
       contentType: "application/json",
-      body: JSON.stringify({ ...catalogFixture, games: [] })
+      body: JSON.stringify({ ...catalogFixture, games: [], setupRequired: false })
     })
   );
   await page.reload();
@@ -796,12 +820,26 @@ test("guides house answers one game at a time and keeps progress locally", async
       })
     })
   );
+  await page.evaluate(() => {
+    globalThis.localStorage.setItem(
+      "game-night-library:setup-progress",
+      JSON.stringify({
+        answers: { "first-game": { learned: "yes" } },
+        completedSlugs: ["first-game"],
+        sourceSha: "b".repeat(40),
+        savedAt: new Date().toISOString()
+      })
+    );
+  });
   await allowSetup(page);
 
   await page.getByRole("button", { name: "Setup", exact: true }).click();
   await expect(page).toHaveTitle("Setup | Game Night Library");
   await expect(page.getByText("Verified collaborator:")).toBeVisible();
   await expect(page.getByRole("heading", { name: "First Game" })).toBeVisible();
+  await expect(
+    page.locator(".setup-progress:visible").getByText("0 of 2", { exact: true })
+  ).toBeVisible();
   const setupNavigator = page.getByRole("complementary", {
     name: "Setup progress and game navigation"
   });
@@ -925,6 +963,9 @@ test("guides house answers one game at a time and keeps progress locally", async
   await expect(
     page.getByRole("link", { name: "View proposed update #42 on GitHub" })
   ).toHaveAttribute("href", `${activeRepositoryUrl}/pull/42`);
+  expect(
+    await page.evaluate(() => globalThis.localStorage.getItem("game-night-library:setup-progress"))
+  ).toBeNull();
 
   const downloadPromise = page.waitForEvent("download");
   await page.getByRole("button", { name: "Download CSV copy" }).click();
@@ -934,7 +975,7 @@ test("guides house answers one game at a time and keeps progress locally", async
   await page.reload();
   await page.getByRole("button", { name: "Setup", exact: true }).click();
   await expect(
-    page.locator(".setup-progress:visible").getByText("2 of 2", { exact: true })
+    page.locator(".setup-progress:visible").getByText("0 of 2", { exact: true })
   ).toBeVisible();
 });
 
@@ -1006,7 +1047,7 @@ test("rejects an OAuth callback that was not started in this browser", async ({ 
     exchangeRequests += 1;
     return route.abort();
   });
-  await page.goto("/?v=1&view=setup&code=untrusted&state=untrusted");
+  await page.goto("/?view=setup&code=untrusted&state=untrusted");
   await expect(
     page.getByRole("heading", { name: "We couldn’t verify collaborator access" })
   ).toBeVisible();
@@ -1141,10 +1182,7 @@ test("explains failed verification without revealing setup", async ({ page }) =>
     route.fulfill({ status: 403 })
   );
   await page.evaluate((session) => {
-    globalThis.sessionStorage.setItem(
-      "board-game-inventory:setup-access:v1",
-      JSON.stringify(session)
-    );
+    globalThis.sessionStorage.setItem("game-night-library:setup-access", JSON.stringify(session));
   }, setupSession);
 
   await page.getByRole("button", { name: "Setup", exact: true }).click();

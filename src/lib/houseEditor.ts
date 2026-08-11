@@ -57,13 +57,11 @@ export interface HouseEditorDataset {
 }
 
 export interface SavedHouseProgress {
-  schemaVersion: 2;
   answers: Record<string, Partial<HouseAnswer>>;
   completedSlugs: string[];
 }
 
 export const EMPTY_PROGRESS: SavedHouseProgress = {
-  schemaVersion: 2,
   answers: {},
   completedSlugs: []
 };
@@ -72,8 +70,6 @@ export function parseSavedHouseProgress(value: unknown): SavedHouseProgress {
   if (
     typeof value !== "object" ||
     value === null ||
-    !("schemaVersion" in value) ||
-    value.schemaVersion !== 2 ||
     !("answers" in value) ||
     typeof value.answers !== "object" ||
     value.answers === null ||
@@ -87,7 +83,10 @@ export function parseSavedHouseProgress(value: unknown): SavedHouseProgress {
   ) {
     throw new Error("Saved Setup progress has an unsupported format.");
   }
-  return value as SavedHouseProgress;
+  return {
+    answers: value.answers as SavedHouseProgress["answers"],
+    completedSlugs: [...value.completedSlugs]
+  };
 }
 
 export function parseHouseEditorDataset(value: unknown): HouseEditorDataset {

@@ -69,8 +69,15 @@ validates it and writes an ignored inspection artifact to `outputs/house-intake.
 
 The public Setup screen remains locked until the separate service verifies a repository
 collaborator. Once verified, the owner can answer games alphabetically, leave uncertain optional
-ratings blank, and return later because progress is saved automatically in that browser. Completed
-answers are submitted to a branch and pull request; Setup never writes to `main` or merges.
+ratings blank, and return later because progress is saved automatically in that browser for up to 30
+days. Saved progress is discarded when the questionnaire source changes, after a successful
+submission, or when the deployed catalog reports that Setup is complete. Completed answers are
+submitted to a branch and pull request; Setup never writes to `main` or merges.
+
+Until the first owned game is published, the public Library and Roulette use a labeled fictional
+demo collection so the filters and draw can be explored. Those examples are browser-only and never
+enter the authored inventory, generated catalog, Setup questionnaire, maintenance forms, or GitHub
+requests. Publishing the first real game removes them automatically.
 
 The live service ties the questionnaire to the Git blob SHA it read from `main` and rejects a stale
 submission. Adding or removing questionnaire rows therefore requires regenerating and reloading the
@@ -140,4 +147,4 @@ merge manually. The next Pages workflow enriches the catalog, caches cover thumb
 ephemeral artifact, and deploys only if the complete build succeeds.
 
 Once every required house row is complete, the next build hides the Setup tab. Adding a new
-incomplete game later makes Setup available again.
+incomplete game later makes Setup available again with a fresh questionnaire state.
