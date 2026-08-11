@@ -5,10 +5,9 @@ import type {
   BggMetadata,
   CatalogGame,
   CatalogMetadata,
-  CatalogPayload,
-  Inventory,
-  Wishlist
-} from "../src/types";
+  CatalogPayload
+} from "../shared/catalog/types.js";
+import type { Inventory, Wishlist } from "../shared/inventory/types.js";
 import { fetchBggMetadata } from "./bgg";
 import { cacheCatalogThumbnails } from "./thumbnailCache";
 

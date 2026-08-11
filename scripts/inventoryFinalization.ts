@@ -7,8 +7,8 @@ import type {
   OwnedExpansion,
   TableSpace,
   ValueOverrides
-} from "../src/types";
-import { parseInventory } from "../src/lib/schema";
+} from "../shared/inventory/types.js";
+import { parseInventory } from "../shared/inventory/schema.js";
 import { validateHouseSubmission } from "../service/houseSubmission";
 import {
   buildHouseIntake,

@@ -1,4 +1,4 @@
-import { parseInventory } from "../src/lib/schema";
+import { parseInventory } from "../shared/inventory/schema.js";
 import type {
   Availability,
   GameMode,
@@ -8,7 +8,7 @@ import type {
   SetupTimeRange,
   TableSpace,
   ValueOverrides
-} from "../src/types";
+} from "../shared/inventory/types.js";
 import { SETUP_TIME_RANGE_VALUES } from "../shared/setup/houseOptions";
 import { fieldsFromIssue } from "./issueRequest";
 

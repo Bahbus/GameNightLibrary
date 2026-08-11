@@ -7,8 +7,8 @@ import type {
   SetupTimeRange,
   TableSpace,
   ValueOverrides
-} from "../src/types";
-import { parseInventory } from "../src/lib/schema";
+} from "../shared/inventory/types.js";
+import { parseInventory } from "../shared/inventory/schema.js";
 import { SETUP_TIME_RANGE_VALUES } from "../shared/setup/houseOptions";
 import { csvRecords } from "../shared/csv";
 

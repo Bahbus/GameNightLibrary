@@ -16,14 +16,37 @@ describe("shared setup domain", () => {
     const sharedSources = await Promise.all(
       [
         "shared/csv.ts",
+        "shared/catalog/types.ts",
+        "shared/inventory/schema.ts",
+        "shared/inventory/types.ts",
         "shared/setup/houseIntake.ts",
         "shared/setup/houseOptions.ts",
+        "shared/setup/setupSuggestions.ts",
         "shared/setup/serviceRevision.ts"
       ].map((path) => readFile(path, "utf8"))
     );
 
     for (const source of sharedSources) {
       expect(source).not.toMatch(/from ["'].*\/(?:scripts|service|src)\//);
+    }
+  });
+
+  it("keeps repository data scripts independent from browser modules", async () => {
+    const scriptSources = await Promise.all(
+      [
+        "scripts/bgg.ts",
+        "scripts/catalogGeneration.ts",
+        "scripts/inventoryFinalization.ts",
+        "scripts/inventoryFromCsv.ts",
+        "scripts/inventoryIo.ts",
+        "scripts/inventoryTransaction.ts",
+        "scripts/setupSuggestionGeneration.ts",
+        "scripts/thumbnailCache.ts"
+      ].map((path) => readFile(path, "utf8"))
+    );
+
+    for (const source of scriptSources) {
+      expect(source).not.toMatch(/from ["']\.\.\/src\//);
     }
   });
 
