@@ -53,9 +53,11 @@ describe("shared setup domain", () => {
   it("type-checks the service against only its API and shared contracts", async () => {
     const config = JSON.parse(await readFile("tsconfig.service.json", "utf8")) as {
       include: string[];
+      extends: string;
     };
 
     expect(config.include).toEqual(["api/index.ts", "service", "shared"]);
+    expect(config.extends).toBe("./tsconfig.base.json");
   });
 
   it("copies shared contracts into the container build before bundling the service", async () => {

@@ -112,8 +112,11 @@ npm run vercel:build
 The Vercel CLI is intentionally not an application dependency. The guarded deployment command
 pins its version while keeping provider tooling out of the service's production dependency tree.
 
-The container runs as an unprivileged user with a read-only filesystem and exposes port `8787`.
-`GET /healthz` is the only unauthenticated data endpoint.
+The multi-stage container bundles the service and its JavaScript dependencies into one reviewed
+artifact, so the runtime image contains neither package manifests nor `node_modules`. Its build
+context allowlists only the package manifests, service source, and shared contracts. The container
+runs as an unprivileged user with all Linux capabilities dropped, a read-only filesystem, and an
+init process, and exposes port `8787`. `GET /healthz` is the only unauthenticated data endpoint.
 
 The hosting platform must provide:
 
