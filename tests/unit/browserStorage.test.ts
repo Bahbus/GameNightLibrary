@@ -1,11 +1,27 @@
 import { describe, expect, it } from "vitest";
-import { clearLegacyBrowserState } from "../../src/lib/browserStorage";
+import {
+  clearLegacyBrowserState,
+  readBrowserValue,
+  removeBrowserValue,
+  tryWriteBrowserValue,
+  writeBrowserValue
+} from "../../src/lib/browserStorage";
 
 class RecordingStorage {
+  values = new Map<string, string>();
   removed: string[] = [];
 
+  getItem(key: string) {
+    return this.values.get(key) ?? null;
+  }
+
   removeItem(key: string) {
+    this.values.delete(key);
     this.removed.push(key);
+  }
+
+  setItem(key: string, value: string) {
+    this.values.set(key, value);
   }
 }
 
@@ -29,6 +45,29 @@ const withThrowingStorageProperty = (
 };
 
 describe("browser storage lifecycle", () => {
+  it("provides one injectable read, write, and removal contract", () => {
+    const storage = new RecordingStorage();
+
+    writeBrowserValue("local", "example", "saved", storage);
+
+    expect(readBrowserValue("local", "example", storage)).toBe("saved");
+    expect(removeBrowserValue("local", "example", storage)).toBe(true);
+    expect(readBrowserValue("local", "example", storage)).toBeNull();
+  });
+
+  it("distinguishes best-effort writes from writes that must report failure", () => {
+    const storage = {
+      setItem() {
+        throw new globalThis.DOMException("Storage is full", "QuotaExceededError");
+      }
+    };
+
+    expect(tryWriteBrowserValue("local", "example", "value", storage)).toBe(false);
+    expect(() => writeBrowserValue("local", "example", "value", storage)).toThrow(
+      /Storage is full/
+    );
+  });
+
   it("removes every obsolete versioned key", () => {
     const local = new RecordingStorage();
     const session = new RecordingStorage();
@@ -53,6 +92,10 @@ describe("browser storage lifecycle", () => {
 
     withThrowingStorageProperty("localStorage", () => {
       expect(() => clearLegacyBrowserState(undefined, session)).not.toThrow();
+      expect(readBrowserValue("local", "example")).toBeNull();
+      expect(removeBrowserValue("local", "example")).toBe(false);
+      expect(tryWriteBrowserValue("local", "example", "value")).toBe(false);
+      expect(() => writeBrowserValue("local", "example", "value")).toThrow(/Storage access denied/);
     });
     expect(session.removed).toHaveLength(3);
 
