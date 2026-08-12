@@ -349,15 +349,34 @@ test("uses wide screens for persistent filters and a denser catalog", async ({
 
 test("reveals a weighted roulette result and supports reset", async ({ page }) => {
   await page.getByRole("button", { name: "Roulette" }).click();
-  const wheel = page.getByRole("list", { name: /Weighted roulette odds/ });
-  const slices = wheel.getByRole("listitem");
+  const wheel = page.getByRole("listbox", { name: /Weighted roulette odds/ });
+  const slices = wheel.getByRole("option");
   await expect(slices).toHaveCount(3);
   const probabilities = (await slices.evaluateAll((items) =>
     items.map((item) => Number(item.getAttribute("aria-label")?.match(/([\d.]+)% chance/)?.[1]))
   )) as number[];
   expect(probabilities.reduce((sum, probability) => sum + probability, 0)).toBeCloseTo(100, 0);
-  await slices.first().focus();
+  await wheel.focus();
+  await expect(slices.first()).toHaveAttribute("aria-selected", "true");
   await expect(page.getByRole("tooltip")).toContainText("chance this spin");
+  await wheel.press("End");
+  await expect(slices.last()).toHaveAttribute("aria-selected", "true");
+  await wheel.press("ArrowLeft");
+  await expect(slices.nth(1)).toHaveAttribute("aria-selected", "true");
+  expect(
+    await slices.evaluateAll((items) => items.filter((item) => item.tabIndex >= 0).length)
+  ).toBe(0);
+  const wheelLabels = page.locator(".roulette-slice-label");
+  if ((page.viewportSize()?.width ?? 0) <= 520) {
+    await expect(wheelLabels.first()).toBeHidden();
+  } else {
+    await expect(wheelLabels.first()).toBeVisible();
+    const labelColors = await wheelLabels.first().evaluate((label) => ({
+      background: globalThis.getComputedStyle(label.querySelector("rect")!).fill,
+      text: globalThis.getComputedStyle(label.querySelector("text")!).fill
+    }));
+    expect(labelColors.background).not.toBe(labelColors.text);
+  }
   const wheelBox = await page.locator(".roulette-wheel-shell").boundingBox();
   const stageBox = await page.locator(".roulette-stage").boundingBox();
   expect(wheelBox!.width).toBeLessThanOrEqual(stageBox!.width + 1);
@@ -380,6 +399,23 @@ test("reveals a weighted roulette result and supports reset", async ({ page }) =
   await page.getByLabel("Group size").fill("6");
   await expect(slices).toHaveCount(1);
   await expect(slices.first()).toHaveAttribute("aria-label", /100\.0% chance/);
+});
+
+test("keeps a tapped roulette tooltip open until the user dismisses it", async ({
+  page
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "phone", "Touch interaction contract");
+  await page.getByRole("button", { name: "Roulette" }).click();
+  const wheel = page.getByRole("listbox", { name: /Weighted roulette odds/ });
+  const firstSlice = wheel.getByRole("option").first();
+
+  await firstSlice.tap();
+  await expect(page.getByRole("tooltip")).toContainText("chance this spin");
+  await page.waitForTimeout(400);
+  await expect(page.getByRole("tooltip")).toBeVisible();
+
+  await page.getByRole("heading", { name: "Game Night Roulette" }).tap();
+  await expect(page.getByRole("tooltip")).toHaveCount(0);
 });
 
 test("prefills an authenticated GitHub maintenance request", async ({ page }) => {
@@ -1228,6 +1264,19 @@ test("fits a long setup game list to the questionnaire height", async ({ page })
   await expect(page.getByRole("heading", { name: "Game 01" })).toBeVisible();
 
   const gameList = page.getByRole("navigation", { name: "Games to set up" });
+  const gameButtons = gameList.getByRole("button");
+  expect(
+    await gameButtons.evaluateAll(
+      (buttons) => buttons.filter((button) => button.tabIndex === 0).length
+    )
+  ).toBe(1);
+  await gameButtons.first().focus();
+  await gameButtons.first().press("ArrowDown");
+  await expect(page.getByRole("heading", { name: "Game 02" })).toBeVisible();
+  await expect(gameButtons.nth(1)).toBeFocused();
+  await expect(gameButtons.nth(1)).toHaveAttribute("aria-current", "step");
+  await gameButtons.nth(1).press("Enter");
+  await expect(page.getByRole("heading", { name: "Game 02" })).toBeFocused();
   await expect
     .poll(() => gameList.evaluate((element) => element.scrollHeight > element.clientHeight))
     .toBe(true);

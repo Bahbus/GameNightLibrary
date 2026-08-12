@@ -1,4 +1,4 @@
-import { useMemo, useState } from "preact/hooks";
+import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { createRouletteSlices, type RouletteSlice } from "../../lib/rouletteWheel";
 import type { ScoredGame } from "../../types";
 
@@ -44,53 +44,137 @@ export function RouletteWheel({
   revealing: boolean;
 }) {
   const slices = useMemo(() => createRouletteSlices(games), [games]);
-  const [activeSlug, setActiveSlug] = useState("");
+  const shellRef = useRef<globalThis.HTMLDivElement>(null);
+  const wheelRef = useRef<globalThis.SVGSVGElement>(null);
+  const [hoveredSlug, setHoveredSlug] = useState("");
+  const [selectedSlug, setSelectedSlug] = useState("");
+  const activeSlug = hoveredSlug || selectedSlug;
   const active = slices.find((slice) => slice.entry.game.slug === activeSlug);
   const displayedAngle = active ? active.centerAngle + rotation : 0;
   const tooltipPoint = point(displayedAngle, 39);
 
+  useEffect(() => {
+    if (!selectedSlug || slices.some((slice) => slice.entry.game.slug === selectedSlug)) return;
+    setSelectedSlug("");
+  }, [selectedSlug, slices]);
+
+  useEffect(() => {
+    if (!selectedSlug) return;
+    const closeOutside = (event: globalThis.PointerEvent) => {
+      if (!shellRef.current?.contains(event.target as globalThis.Node)) setSelectedSlug("");
+    };
+    globalThis.document.addEventListener("pointerdown", closeOutside);
+    return () => globalThis.document.removeEventListener("pointerdown", closeOutside);
+  }, [selectedSlug]);
+
+  const moveSelection = (nextIndex: number) => {
+    const next = slices[Math.max(0, Math.min(slices.length - 1, nextIndex))];
+    if (next) setSelectedSlug(next.entry.game.slug);
+  };
+
+  const handleWheelKey = (event: globalThis.KeyboardEvent) => {
+    if (!slices.length || revealing) return;
+    const currentIndex = Math.max(
+      0,
+      slices.findIndex((slice) => slice.entry.game.slug === selectedSlug)
+    );
+    let nextIndex: number | undefined;
+    if (event.key === "ArrowRight" || event.key === "ArrowDown") {
+      nextIndex = Math.min(currentIndex + 1, slices.length - 1);
+    } else if (event.key === "ArrowLeft" || event.key === "ArrowUp") {
+      nextIndex = Math.max(currentIndex - 1, 0);
+    } else if (event.key === "Home") {
+      nextIndex = 0;
+    } else if (event.key === "End") {
+      nextIndex = slices.length - 1;
+    } else if (event.key === "Escape") {
+      setSelectedSlug("");
+      return;
+    }
+    if (nextIndex === undefined) return;
+    event.preventDefault();
+    moveSelection(nextIndex);
+  };
+
   return (
-    <div class="roulette-wheel-shell">
+    <div class="roulette-wheel-shell" ref={shellRef}>
       <span class="roulette-pointer" aria-hidden="true" />
       <div
         class="roulette-wheel-graphic"
         style={{ transform: `rotate(${rotation}deg)` }}
-        onTransitionEnd={() => setActiveSlug("")}
+        onTransitionEnd={(event) => {
+          if (event.target !== event.currentTarget || event.propertyName !== "transform") return;
+          setHoveredSlug("");
+          setSelectedSlug("");
+        }}
       >
         <svg
+          ref={wheelRef}
           class="roulette-wheel"
           viewBox="0 0 100 100"
-          role="list"
-          aria-label={`Weighted roulette odds for ${games.length} ${games.length === 1 ? "game" : "games"}`}
+          role="listbox"
+          tabIndex={revealing || !games.length ? -1 : 0}
+          aria-label={`Weighted roulette odds for ${games.length} ${games.length === 1 ? "game" : "games"}. Use arrow keys to inspect each chance.`}
+          aria-activedescendant={selectedSlug ? `roulette-slice-${selectedSlug}` : undefined}
+          onFocus={() => {
+            if (!selectedSlug && slices[0]) setSelectedSlug(slices[0].entry.game.slug);
+          }}
+          onBlur={() => {
+            setHoveredSlug("");
+            setSelectedSlug("");
+          }}
+          onKeyDown={handleWheelKey}
         >
           {slices.map((slice, index) => {
             const percentage = slice.probability * 100;
             const labelPoint = point(slice.centerAngle, 33);
             const showLabel = percentage >= 9 && slices.length <= 12;
+            const label = shortLabel(slice.entry.game.name);
+            const labelWidth = Math.min(42, Math.max(16, label.length * 2.25));
             return (
               <g
-                role="listitem"
-                tabIndex={revealing ? -1 : 0}
+                id={`roulette-slice-${slice.entry.game.slug}`}
+                role="option"
                 class="roulette-slice"
                 aria-label={`${slice.entry.game.name}: ${percentage.toFixed(1)}% chance`}
-                onMouseEnter={() => !revealing && setActiveSlug(slice.entry.game.slug)}
-                onMouseLeave={() => setActiveSlug("")}
-                onFocus={() => !revealing && setActiveSlug(slice.entry.game.slug)}
-                onBlur={() => setActiveSlug("")}
+                aria-selected={selectedSlug === slice.entry.game.slug}
+                onPointerEnter={(event) => {
+                  if (!revealing && event.pointerType === "mouse")
+                    setHoveredSlug(slice.entry.game.slug);
+                }}
+                onPointerLeave={(event) => {
+                  if (event.pointerType === "mouse") setHoveredSlug("");
+                }}
+                onClick={() => {
+                  if (revealing) return;
+                  wheelRef.current?.focus({ preventScroll: true });
+                  setSelectedSlug(slice.entry.game.slug);
+                }}
                 key={slice.entry.game.slug}
               >
                 <path d={slicePath(slice)} fill={COLORS[index % COLORS.length]} />
                 {showLabel && (
-                  <text
-                    x={labelPoint.x}
-                    y={labelPoint.y}
+                  <g
+                    class="roulette-slice-label"
                     aria-hidden="true"
-                    text-anchor="middle"
-                    dominant-baseline="middle"
                     transform={`rotate(${-rotation} ${labelPoint.x} ${labelPoint.y})`}
                   >
-                    {shortLabel(slice.entry.game.name)}
-                  </text>
+                    <rect
+                      x={labelPoint.x - labelWidth / 2}
+                      y={labelPoint.y - 3.5}
+                      width={labelWidth}
+                      height="7"
+                      rx="2.4"
+                    />
+                    <text
+                      x={labelPoint.x}
+                      y={labelPoint.y}
+                      text-anchor="middle"
+                      dominant-baseline="middle"
+                    >
+                      {label}
+                    </text>
+                  </g>
                 )}
               </g>
             );
