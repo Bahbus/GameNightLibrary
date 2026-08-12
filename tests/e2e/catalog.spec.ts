@@ -268,6 +268,19 @@ test("filters the library and preserves shareable settings", async ({ page }) =>
   await expect(page).toHaveURL(/players=6/);
 });
 
+test("anchors every game-card details action to the lower edge", async ({ page }) => {
+  const bottomOffsets = await page.locator(".game-card").evaluateAll((cards) =>
+    cards.map((card) => {
+      const cardBox = card.getBoundingClientRect();
+      const buttonBox = card.querySelector(".card-links button")!.getBoundingClientRect();
+      return Math.round((cardBox.bottom - buttonBox.bottom) * 10) / 10;
+    })
+  );
+
+  expect(bottomOffsets.length).toBeGreaterThan(1);
+  expect(Math.max(...bottomOffsets) - Math.min(...bottomOffsets)).toBeLessThanOrEqual(1);
+});
+
 test("inspects a game without losing the catalog position", async ({ page }, testInfo) => {
   const trigger = page
     .getByRole("article")
@@ -336,11 +349,37 @@ test("uses wide screens for persistent filters and a denser catalog", async ({
 
 test("reveals a weighted roulette result and supports reset", async ({ page }) => {
   await page.getByRole("button", { name: "Roulette" }).click();
+  const wheel = page.getByRole("list", { name: /Weighted roulette odds/ });
+  const slices = wheel.getByRole("listitem");
+  await expect(slices).toHaveCount(3);
+  const probabilities = (await slices.evaluateAll((items) =>
+    items.map((item) => Number(item.getAttribute("aria-label")?.match(/([\d.]+)% chance/)?.[1]))
+  )) as number[];
+  expect(probabilities.reduce((sum, probability) => sum + probability, 0)).toBeCloseTo(100, 0);
+  await slices.first().focus();
+  await expect(page.getByRole("tooltip")).toContainText("chance this spin");
+  const wheelBox = await page.locator(".roulette-wheel-shell").boundingBox();
+  const stageBox = await page.locator(".roulette-stage").boundingBox();
+  expect(wheelBox!.width).toBeLessThanOrEqual(stageBox!.width + 1);
+  expect(wheelBox!.width).toBeGreaterThanOrEqual(260);
+
+  const graphic = page.locator(".roulette-wheel-graphic");
+  await expect(graphic).toHaveAttribute("style", /rotate\(0deg\)/);
   await page.getByRole("button", { name: "Spin the roulette" }).click();
+  await expect(graphic).toHaveAttribute("style", /rotate\((?!0deg)[\d.]+deg\)/);
+  await expect(slices).toHaveCount(3);
   const skip = page.getByRole("button", { name: "Skip animation" });
   if (await skip.isVisible()) await skip.click();
   await expect(page.getByText("Tonight’s pick")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Reset draws" })).toBeVisible();
+  await expect(slices).toHaveCount(2);
+  const reset = page.getByRole("button", { name: "Reset draws" });
+  await expect(reset).toBeVisible();
+  await reset.click();
+  await expect(slices).toHaveCount(3);
+
+  await page.getByLabel("Group size").fill("6");
+  await expect(slices).toHaveCount(1);
+  await expect(slices.first()).toHaveAttribute("aria-label", /100\.0% chance/);
 });
 
 test("prefills an authenticated GitHub maintenance request", async ({ page }) => {
