@@ -23,17 +23,16 @@ interface StorageRemover {
   removeItem(key: string): void;
 }
 
-export function clearLegacyBrowserState(
-  local: StorageRemover = globalThis.localStorage,
-  session: StorageRemover = globalThis.sessionStorage
-) {
+export function clearLegacyBrowserState(local?: StorageRemover, session?: StorageRemover) {
   try {
-    for (const key of LEGACY_LOCAL_KEYS) local.removeItem(key);
+    const storage = local ?? globalThis.localStorage;
+    for (const key of LEGACY_LOCAL_KEYS) storage.removeItem(key);
   } catch {
     // The application remains usable when browser storage is unavailable.
   }
   try {
-    for (const key of LEGACY_SESSION_KEYS) session.removeItem(key);
+    const storage = session ?? globalThis.sessionStorage;
+    for (const key of LEGACY_SESSION_KEYS) storage.removeItem(key);
   } catch {
     // Collaborator verification will simply start a fresh session.
   }

@@ -6,6 +6,7 @@ import {
   readSetupAccessSession,
   storeSetupAccessSession,
   submitHouseAnswers,
+  takeSetupAuthValues,
   verifySetupAccess
 } from "../../src/lib/setupAccess";
 
@@ -48,6 +49,37 @@ describe("setup collaborator access", () => {
     expect(readSetupAccessSession(storage)).toEqual(session);
     clearSetupAccessSession(storage);
     expect(readSetupAccessSession(storage)).toBeUndefined();
+  });
+
+  it("fails safely when browser policy blocks sessionStorage itself", async () => {
+    const descriptor = Object.getOwnPropertyDescriptor(globalThis, "sessionStorage");
+    Object.defineProperty(globalThis, "sessionStorage", {
+      configurable: true,
+      get() {
+        throw new globalThis.DOMException("Storage access denied", "SecurityError");
+      }
+    });
+    const session = {
+      grant: "opaque-grant",
+      login: "owner",
+      expiresAt: "2099-01-01T00:00:00.000Z"
+    };
+    try {
+      expect(readSetupAccessSession()).toBeUndefined();
+      expect(takeSetupAuthValues()).toBeUndefined();
+      expect(() => clearSetupAccessSession()).not.toThrow();
+      expect(() => storeSetupAccessSession(session)).toThrow(/Storage access denied/);
+      await expect(
+        beginSetupVerification(new URL("https://auth.example.test/"), {
+          origin: "https://bahbus.github.io",
+          pathname: "/GameNightLibrary/",
+          assign() {}
+        })
+      ).rejects.toThrow(/Storage access denied/);
+    } finally {
+      if (descriptor) Object.defineProperty(globalThis, "sessionStorage", descriptor);
+      else Reflect.deleteProperty(globalThis, "sessionStorage");
+    }
   });
 
   it("requires the service to reconfirm a stored grant", async () => {

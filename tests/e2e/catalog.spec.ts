@@ -649,6 +649,23 @@ test("continues working when browser preference storage is unavailable", async (
   await expect(page.getByText("Tonight’s pick")).toBeVisible();
 });
 
+test("explains when browser storage prevents collaborator verification", async ({ page }) => {
+  await page.addInitScript(() => {
+    globalThis.Storage.prototype.setItem = () => {
+      throw new globalThis.DOMException("Storage unavailable", "SecurityError");
+    };
+  });
+  await page.reload();
+  await page.getByRole("button", { name: "Setup", exact: true }).click();
+  await page.getByRole("button", { name: "Verify with GitHub" }).click();
+
+  await expect(
+    page.getByRole("heading", { name: "We couldn’t verify collaborator access" })
+  ).toBeVisible();
+  await expect(page.getByRole("alert")).toContainText("storage permissions");
+  await expect(page.getByRole("heading", { name: "Tell us about the games" })).toHaveCount(0);
+});
+
 test("labels external destinations and opens them safely", async ({ page }) => {
   const githubLink = page.locator(".github-link");
   await expect(githubLink).toHaveAttribute("target", "_blank");
@@ -695,6 +712,57 @@ test("offers fictional examples only while an empty collection still needs Setup
   await page.getByRole("button", { name: "Roulette", exact: true }).click();
   await expect(page.getByText("You’re exploring fictional demo games.")).toBeVisible();
   await expect(page.getByRole("button", { name: "Spin the roulette" })).toBeVisible();
+});
+
+test("removes obsolete demo draws when the real catalog arrives", async ({ page }) => {
+  await page.evaluate(() =>
+    globalThis.localStorage.setItem(
+      "game-night-library:roulette-drawn",
+      JSON.stringify(["demo-clockwork-cafe", "forest-council", "missing-game"])
+    )
+  );
+  await page.reload();
+
+  await expect
+    .poll(() =>
+      page.evaluate(() => globalThis.localStorage.getItem("game-night-library:roulette-drawn"))
+    )
+    .toBe(JSON.stringify(["forest-council"]));
+  await page.getByRole("button", { name: "Roulette", exact: true }).click();
+  await expect(page.getByText("1 already drawn", { exact: true })).toBeVisible();
+  await expect(page.getByText("2 in the next spin", { exact: true })).toBeVisible();
+});
+
+test("treats an authored demo-like slug as a real game", async ({ page }) => {
+  const authoredGame = {
+    ...catalogFixture.games[0],
+    slug: "demo-clockwork-cafe",
+    name: "Clockwork Café: Published Edition",
+    expansions: []
+  };
+  await page.unroute("**/catalog.json");
+  await page.route("**/catalog.json", (route) =>
+    route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({ ...catalogFixture, games: [authoredGame], setupRequired: true })
+    })
+  );
+  await page.evaluate(() =>
+    globalThis.localStorage.setItem(
+      "game-night-library:roulette-drawn",
+      JSON.stringify(["demo-clockwork-cafe"])
+    )
+  );
+  await page.reload();
+
+  await expect(page.getByText("You’re exploring fictional demo games.")).toHaveCount(0);
+  await expect(page.getByText("Fictional example")).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "Suggest edit" })).toBeVisible();
+  await page.getByRole("button", { name: "Details" }).click();
+  await expect(page.getByText(/This fictional game is here/)).toHaveCount(0);
+  expect(
+    await page.evaluate(() => globalThis.localStorage.getItem("game-night-library:roulette-drawn"))
+  ).toBe(JSON.stringify(["demo-clockwork-cafe"]));
 });
 
 test("offers useful recovery when no game meets the requirements", async ({ page }) => {

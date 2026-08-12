@@ -67,12 +67,13 @@ export const parseSetupServiceUrl = (value: string | undefined): URL | undefined
 };
 
 export const readSetupAccessSession = (
-  storage: StorageReader & StorageRemover = globalThis.sessionStorage
+  storage?: StorageReader & StorageRemover
 ): SetupAccessSession | undefined => {
   try {
-    const value = JSON.parse(storage.getItem(SESSION_KEY) ?? "null") as unknown;
+    const target = storage ?? globalThis.sessionStorage;
+    const value = JSON.parse(target.getItem(SESSION_KEY) ?? "null") as unknown;
     if (!value || typeof value !== "object" || Array.isArray(value)) {
-      safelyRemove(storage, SESSION_KEY);
+      safelyRemove(target, SESSION_KEY);
       return undefined;
     }
     const candidate = value as Record<string, unknown>;
@@ -84,7 +85,7 @@ export const readSetupAccessSession = (
       typeof candidate.expiresAt !== "string" ||
       !Number.isFinite(Date.parse(candidate.expiresAt))
     ) {
-      safelyRemove(storage, SESSION_KEY);
+      safelyRemove(target, SESSION_KEY);
       return undefined;
     }
     return {
@@ -93,18 +94,25 @@ export const readSetupAccessSession = (
       expiresAt: candidate.expiresAt
     };
   } catch {
-    safelyRemove(storage, SESSION_KEY);
+    try {
+      safelyRemove(storage ?? globalThis.sessionStorage, SESSION_KEY);
+    } catch {
+      // An unavailable session store is equivalent to having no saved grant.
+    }
     return undefined;
   }
 };
 
-export const storeSetupAccessSession = (
-  session: SetupAccessSession,
-  storage: StorageWriter = globalThis.sessionStorage
-) => storage.setItem(SESSION_KEY, JSON.stringify(session));
+export const storeSetupAccessSession = (session: SetupAccessSession, storage?: StorageWriter) =>
+  (storage ?? globalThis.sessionStorage).setItem(SESSION_KEY, JSON.stringify(session));
 
-export const clearSetupAccessSession = (storage: StorageRemover = globalThis.sessionStorage) =>
-  storage.removeItem(SESSION_KEY);
+export const clearSetupAccessSession = (storage?: StorageRemover) => {
+  try {
+    safelyRemove(storage ?? globalThis.sessionStorage, SESSION_KEY);
+  } catch {
+    // Ending a Setup session remains safe when session storage is unavailable.
+  }
+};
 
 const parseAccessResponse = (value: unknown): VerifiedSetupAccess => {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
@@ -176,12 +184,13 @@ const sha256 = async (value: string) =>
 export const beginSetupVerification = async (
   serviceUrl: URL,
   location: { assign(url: string): void; origin: string; pathname: string } = window.location,
-  storage: StorageWriter = globalThis.sessionStorage
+  storage?: StorageWriter
 ) => {
+  const target = storage ?? globalThis.sessionStorage;
   const nonce = randomValue(32);
   const codeVerifier = randomValue(64);
-  storage.setItem(NONCE_KEY, nonce);
-  storage.setItem(VERIFIER_KEY, codeVerifier);
+  target.setItem(NONCE_KEY, nonce);
+  target.setItem(VERIFIER_KEY, codeVerifier);
   const startUrl = new URL("auth/github/start", serviceUrl);
   startUrl.searchParams.set("callback", `${location.origin}${location.pathname}`);
   startUrl.searchParams.set("nonce_hash", await sha256(nonce));
@@ -189,14 +198,17 @@ export const beginSetupVerification = async (
   location.assign(startUrl.href);
 };
 
-export const takeSetupAuthValues = (
-  storage: StorageReader & StorageRemover = globalThis.sessionStorage
-) => {
-  const nonce = storage.getItem(NONCE_KEY);
-  const codeVerifier = storage.getItem(VERIFIER_KEY);
-  storage.removeItem(NONCE_KEY);
-  storage.removeItem(VERIFIER_KEY);
-  return nonce && codeVerifier ? { nonce, codeVerifier } : undefined;
+export const takeSetupAuthValues = (storage?: StorageReader & StorageRemover) => {
+  try {
+    const target = storage ?? globalThis.sessionStorage;
+    const nonce = target.getItem(NONCE_KEY);
+    const codeVerifier = target.getItem(VERIFIER_KEY);
+    target.removeItem(NONCE_KEY);
+    target.removeItem(VERIFIER_KEY);
+    return nonce && codeVerifier ? { nonce, codeVerifier } : undefined;
+  } catch {
+    return undefined;
+  }
 };
 
 export const removeSetupAuthQuery = (

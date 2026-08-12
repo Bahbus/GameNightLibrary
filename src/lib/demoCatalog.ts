@@ -150,5 +150,3 @@ export const DEMO_GAMES: CatalogGame[] = [
     }
   }
 ];
-
-export const DEMO_GAME_SLUGS = new Set(DEMO_GAMES.map((game) => game.slug));
