@@ -33,12 +33,16 @@ clean site address; query parameters appear only for settings that differ from t
 ## Use weighted roulette
 
 Roulette draws from every eligible game. Stronger matches receive more weight, but every eligible
-game keeps a chance of selection. The result is chosen before the animation starts.
+game keeps a chance of selection. The wheel uses those exact weights: each slice occupies the same
+share of the circle as that game's chance in the current draw. Hover or keyboard-focus a slice to
+see its game, probability, and preference match. The result is chosen before the animation starts,
+then the wheel lands that selected slice beneath the pointer without altering the odds.
 
 After a draw:
 
 - the result explains its strongest matches and any unmet soft preferences;
 - rerolls temporarily exclude prior results until every currently eligible game has been drawn;
+- the wheel removes those prior results too, so it always depicts the pool used by the next spin;
 - after that pool is exhausted, Roulette resumes drawing from the full eligible pool;
 - **Reset session** restores the full eligible pool;
 - reduced-motion visitors receive the result immediately, and anyone can skip the animation.
