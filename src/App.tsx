@@ -9,7 +9,13 @@ import { Roulette } from "./features/roulette/Roulette";
 import { WishlistPanel } from "./features/wishlist/WishlistPanel";
 import { SiteFooter } from "./SiteFooter";
 import { buildAppUrl, parseAppView, type AppView } from "./lib/appNavigation";
-import { BROWSER_STORAGE_KEYS, clearLegacyBrowserState } from "./lib/browserStorage";
+import {
+  BROWSER_STORAGE_KEYS,
+  clearLegacyBrowserState,
+  readBrowserValue,
+  removeBrowserValue,
+  tryWriteBrowserValue
+} from "./lib/browserStorage";
 import { createStandalonePlayModes, filterAndScore, sortScoredGames } from "./lib/catalog";
 import { DEMO_GAMES } from "./lib/demoCatalog";
 import { DEFAULT_PREFERENCES, parsePreferences, serializePreferences } from "./lib/preferences";
@@ -31,22 +37,6 @@ const viewTitles: Record<AppView, string> = {
   setup: "Setup | Game Night Library"
 };
 
-const storeLocally = (key: string, value: string) => {
-  try {
-    localStorage.setItem(key, value);
-  } catch {
-    // Filtering and roulette still work when storage is unavailable or full.
-  }
-};
-
-const removeLocalValue = (key: string) => {
-  try {
-    localStorage.removeItem(key);
-  } catch {
-    // Invalid browser state can be ignored when storage is unavailable.
-  }
-};
-
 let legacyStateCleared = false;
 const prepareBrowserState = () => {
   if (legacyStateCleared || typeof window === "undefined") return;
@@ -65,11 +55,12 @@ function initialPreferences(): GroupPreferences {
   prepareBrowserState();
   const fromUrl = parsePreferences(window.location.search);
   if (window.location.search) return fromUrl;
+  const saved = readBrowserValue("local", BROWSER_STORAGE_KEYS.preferences);
+  if (saved === null) return DEFAULT_PREFERENCES;
   try {
-    const saved = localStorage.getItem(BROWSER_STORAGE_KEYS.preferences);
-    return saved === null ? DEFAULT_PREFERENCES : parsePreferences(saved);
+    return parsePreferences(saved);
   } catch {
-    removeLocalValue(BROWSER_STORAGE_KEYS.preferences);
+    removeBrowserValue("local", BROWSER_STORAGE_KEYS.preferences);
     return DEFAULT_PREFERENCES;
   }
 }
@@ -91,15 +82,14 @@ export function App() {
   const inspectorTrigger = useRef<HTMLButtonElement>();
   const [drawn, setDrawnState] = useState<string[]>(() => {
     prepareBrowserState();
+    const stored = readBrowserValue("local", BROWSER_STORAGE_KEYS.rouletteDrawn);
     try {
-      const value = JSON.parse(
-        localStorage.getItem(BROWSER_STORAGE_KEYS.rouletteDrawn) ?? "[]"
-      ) as unknown;
+      const value = JSON.parse(stored ?? "[]") as unknown;
       if (Array.isArray(value) && value.every((slug) => typeof slug === "string")) return value;
-      removeLocalValue(BROWSER_STORAGE_KEYS.rouletteDrawn);
+      removeBrowserValue("local", BROWSER_STORAGE_KEYS.rouletteDrawn);
       return [];
     } catch {
-      removeLocalValue(BROWSER_STORAGE_KEYS.rouletteDrawn);
+      removeBrowserValue("local", BROWSER_STORAGE_KEYS.rouletteDrawn);
       return [];
     }
   });
@@ -141,7 +131,11 @@ export function App() {
   }, [payload, preferences, setupAuthCallback, view]);
 
   useEffect(() => {
-    storeLocally(BROWSER_STORAGE_KEYS.preferences, serializePreferences(preferences));
+    tryWriteBrowserValue(
+      "local",
+      BROWSER_STORAGE_KEYS.preferences,
+      serializePreferences(preferences)
+    );
     if (isSetupAuthCallback()) return;
     window.history.replaceState(null, "", buildAppUrl(window.location.pathname, preferences, view));
     setShareStatus("idle");
@@ -162,7 +156,7 @@ export function App() {
 
   const setDrawn = (next: string[]) => {
     setDrawnState(next);
-    storeLocally(BROWSER_STORAGE_KEYS.rouletteDrawn, JSON.stringify(next));
+    tryWriteBrowserValue("local", BROWSER_STORAGE_KEYS.rouletteDrawn, JSON.stringify(next));
   };
 
   const copyShareLink = async () => {
@@ -187,7 +181,7 @@ export function App() {
     setDrawnState((current) => {
       const pruned = current.filter((slug) => activeSlugs.has(slug));
       if (pruned.length === current.length) return current;
-      storeLocally(BROWSER_STORAGE_KEYS.rouletteDrawn, JSON.stringify(pruned));
+      tryWriteBrowserValue("local", BROWSER_STORAGE_KEYS.rouletteDrawn, JSON.stringify(pruned));
       return pruned;
     });
   }, [games, payload]);

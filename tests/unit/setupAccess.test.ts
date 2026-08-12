@@ -139,6 +139,9 @@ describe("setup collaborator access", () => {
       }
     };
     await beginSetupVerification(new URL("https://auth.example.test/"), location, {
+      removeItem(key) {
+        values.delete(key);
+      },
       setItem(key, value) {
         values.set(key, value);
       }
@@ -150,6 +153,32 @@ describe("setup collaborator access", () => {
     expect(target.searchParams.get("nonce_hash")).toMatch(/^[A-Za-z0-9_-]{43}$/);
     expect([...values.values()]).toHaveLength(2);
     expect(target.href).not.toContain([...values.values()][0]);
+  });
+
+  it("clears partial PKCE state when verification storage fails", async () => {
+    const values = new Map<string, string>();
+    const storage = {
+      removeItem(key: string) {
+        values.delete(key);
+      },
+      setItem(key: string, value: string) {
+        if (values.size) throw new globalThis.DOMException("Storage is full", "QuotaExceededError");
+        values.set(key, value);
+      }
+    };
+
+    await expect(
+      beginSetupVerification(
+        new URL("https://auth.example.test/"),
+        {
+          origin: "https://bahbus.github.io",
+          pathname: "/GameNightLibrary/",
+          assign() {}
+        },
+        storage
+      )
+    ).rejects.toThrow(/Storage is full/);
+    expect(values.size).toBe(0);
   });
 
   it("accepts only the expected repository pull request response", async () => {

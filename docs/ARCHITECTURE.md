@@ -62,6 +62,11 @@ starts, malformed values fall back safely, and Setup progress is cleared after s
 deployment reports Setup complete. No migration or backward-compatibility layer is maintained for
 pre-launch browser state or old share links.
 
+All browser storage access passes through `src/lib/browserStorage.ts`. Public preferences and
+roulette history use best-effort writes because those features remain usable without persistence.
+Setup authentication and progress writes remain strict so their owning interfaces can report that
+temporary verification details or questionnaire answers were not saved.
+
 The browser never receives the BGG API token, GitHub App private key, client secret, installation
 token, or service signing key. It does not directly write repository contents.
 

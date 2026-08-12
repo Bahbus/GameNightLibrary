@@ -1,4 +1,12 @@
-import { BROWSER_STORAGE_KEYS } from "./browserStorage";
+import {
+  BROWSER_STORAGE_KEYS,
+  readBrowserValue,
+  removeBrowserValue,
+  writeBrowserValue,
+  type StorageReader,
+  type StorageRemover,
+  type StorageWriter
+} from "./browserStorage";
 
 const SESSION_KEY = BROWSER_STORAGE_KEYS.setupAccess;
 const NONCE_KEY = BROWSER_STORAGE_KEYS.setupAuthNonce;
@@ -27,26 +35,6 @@ export class SetupVerificationError extends Error {
   }
 }
 
-interface StorageReader {
-  getItem(key: string): string | null;
-}
-
-interface StorageWriter {
-  setItem(key: string, value: string): void;
-}
-
-interface StorageRemover {
-  removeItem(key: string): void;
-}
-
-const safelyRemove = (storage: StorageRemover, key: string) => {
-  try {
-    storage.removeItem(key);
-  } catch {
-    // Verification can restart when session storage is unavailable.
-  }
-};
-
 const isLocalHttp = (url: URL) =>
   url.protocol === "http:" && (url.hostname === "127.0.0.1" || url.hostname === "localhost");
 
@@ -70,10 +58,11 @@ export const readSetupAccessSession = (
   storage?: StorageReader & StorageRemover
 ): SetupAccessSession | undefined => {
   try {
-    const target = storage ?? globalThis.sessionStorage;
-    const value = JSON.parse(target.getItem(SESSION_KEY) ?? "null") as unknown;
+    const value = JSON.parse(
+      readBrowserValue("session", SESSION_KEY, storage) ?? "null"
+    ) as unknown;
     if (!value || typeof value !== "object" || Array.isArray(value)) {
-      safelyRemove(target, SESSION_KEY);
+      removeBrowserValue("session", SESSION_KEY, storage);
       return undefined;
     }
     const candidate = value as Record<string, unknown>;
@@ -85,7 +74,7 @@ export const readSetupAccessSession = (
       typeof candidate.expiresAt !== "string" ||
       !Number.isFinite(Date.parse(candidate.expiresAt))
     ) {
-      safelyRemove(target, SESSION_KEY);
+      removeBrowserValue("session", SESSION_KEY, storage);
       return undefined;
     }
     return {
@@ -94,25 +83,16 @@ export const readSetupAccessSession = (
       expiresAt: candidate.expiresAt
     };
   } catch {
-    try {
-      safelyRemove(storage ?? globalThis.sessionStorage, SESSION_KEY);
-    } catch {
-      // An unavailable session store is equivalent to having no saved grant.
-    }
+    removeBrowserValue("session", SESSION_KEY, storage);
     return undefined;
   }
 };
 
 export const storeSetupAccessSession = (session: SetupAccessSession, storage?: StorageWriter) =>
-  (storage ?? globalThis.sessionStorage).setItem(SESSION_KEY, JSON.stringify(session));
+  writeBrowserValue("session", SESSION_KEY, JSON.stringify(session), storage);
 
-export const clearSetupAccessSession = (storage?: StorageRemover) => {
-  try {
-    safelyRemove(storage ?? globalThis.sessionStorage, SESSION_KEY);
-  } catch {
-    // Ending a Setup session remains safe when session storage is unavailable.
-  }
-};
+export const clearSetupAccessSession = (storage?: StorageRemover) =>
+  void removeBrowserValue("session", SESSION_KEY, storage);
 
 const parseAccessResponse = (value: unknown): VerifiedSetupAccess => {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
@@ -184,13 +164,18 @@ const sha256 = async (value: string) =>
 export const beginSetupVerification = async (
   serviceUrl: URL,
   location: { assign(url: string): void; origin: string; pathname: string } = window.location,
-  storage?: StorageWriter
+  storage?: StorageWriter & StorageRemover
 ) => {
-  const target = storage ?? globalThis.sessionStorage;
   const nonce = randomValue(32);
   const codeVerifier = randomValue(64);
-  target.setItem(NONCE_KEY, nonce);
-  target.setItem(VERIFIER_KEY, codeVerifier);
+  try {
+    writeBrowserValue("session", NONCE_KEY, nonce, storage);
+    writeBrowserValue("session", VERIFIER_KEY, codeVerifier, storage);
+  } catch (cause) {
+    removeBrowserValue("session", NONCE_KEY, storage);
+    removeBrowserValue("session", VERIFIER_KEY, storage);
+    throw cause;
+  }
   const startUrl = new URL("auth/github/start", serviceUrl);
   startUrl.searchParams.set("callback", `${location.origin}${location.pathname}`);
   startUrl.searchParams.set("nonce_hash", await sha256(nonce));
@@ -199,16 +184,11 @@ export const beginSetupVerification = async (
 };
 
 export const takeSetupAuthValues = (storage?: StorageReader & StorageRemover) => {
-  try {
-    const target = storage ?? globalThis.sessionStorage;
-    const nonce = target.getItem(NONCE_KEY);
-    const codeVerifier = target.getItem(VERIFIER_KEY);
-    target.removeItem(NONCE_KEY);
-    target.removeItem(VERIFIER_KEY);
-    return nonce && codeVerifier ? { nonce, codeVerifier } : undefined;
-  } catch {
-    return undefined;
-  }
+  const nonce = readBrowserValue("session", NONCE_KEY, storage);
+  const codeVerifier = readBrowserValue("session", VERIFIER_KEY, storage);
+  removeBrowserValue("session", NONCE_KEY, storage);
+  removeBrowserValue("session", VERIFIER_KEY, storage);
+  return nonce && codeVerifier ? { nonce, codeVerifier } : undefined;
 };
 
 export const removeSetupAuthQuery = (

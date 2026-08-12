@@ -1,13 +1,15 @@
 import { EMPTY_PROGRESS, parseSavedHouseProgress, type SavedHouseProgress } from "./houseEditor";
-import { BROWSER_STORAGE_KEYS } from "./browserStorage";
+import {
+  BROWSER_STORAGE_KEYS,
+  readBrowserValue,
+  removeBrowserValue,
+  writeBrowserValue,
+  type StorageReader,
+  type StorageRemover,
+  type StorageWriter
+} from "./browserStorage";
 
 export const SETUP_PROGRESS_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1_000;
-
-interface SetupProgressStorage {
-  getItem(key: string): string | null;
-  removeItem(key: string): void;
-  setItem(key: string, value: string): void;
-}
 
 export interface StoredSetupProgress {
   progress: SavedHouseProgress;
@@ -19,12 +21,11 @@ const empty = (): StoredSetupProgress => ({
 });
 
 export function readSetupProgress(
-  storage?: SetupProgressStorage,
+  storage?: StorageReader & StorageRemover,
   now = Date.now()
 ): StoredSetupProgress {
   try {
-    const target = storage ?? globalThis.localStorage;
-    const source = target.getItem(BROWSER_STORAGE_KEYS.setupProgress);
+    const source = readBrowserValue("local", BROWSER_STORAGE_KEYS.setupProgress, storage);
     if (!source) return empty();
     const value = JSON.parse(source) as unknown;
     if (typeof value !== "object" || value === null || Array.isArray(value)) {
@@ -46,12 +47,7 @@ export function readSetupProgress(
       sourceSha: candidate.sourceSha
     };
   } catch {
-    try {
-      const target = storage ?? globalThis.localStorage;
-      target.removeItem(BROWSER_STORAGE_KEYS.setupProgress);
-    } catch {
-      // Setup can start fresh when browser storage is unavailable.
-    }
+    removeBrowserValue("local", BROWSER_STORAGE_KEYS.setupProgress, storage);
     return empty();
   }
 }
@@ -59,21 +55,17 @@ export function readSetupProgress(
 export function storeSetupProgress(
   progress: SavedHouseProgress,
   sourceSha: string,
-  storage?: SetupProgressStorage,
+  storage?: StorageWriter,
   now = Date.now()
 ) {
-  const target = storage ?? globalThis.localStorage;
-  target.setItem(
+  writeBrowserValue(
+    "local",
     BROWSER_STORAGE_KEYS.setupProgress,
-    JSON.stringify({ ...progress, sourceSha, savedAt: new Date(now).toISOString() })
+    JSON.stringify({ ...progress, sourceSha, savedAt: new Date(now).toISOString() }),
+    storage
   );
 }
 
-export function clearSetupProgress(storage?: Pick<SetupProgressStorage, "removeItem">) {
-  try {
-    const target = storage ?? globalThis.localStorage;
-    target.removeItem(BROWSER_STORAGE_KEYS.setupProgress);
-  } catch {
-    // Setup completion does not depend on browser storage access.
-  }
+export function clearSetupProgress(storage?: StorageRemover) {
+  removeBrowserValue("local", BROWSER_STORAGE_KEYS.setupProgress, storage);
 }
