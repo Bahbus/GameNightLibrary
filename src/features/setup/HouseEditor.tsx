@@ -194,10 +194,15 @@ export function HouseEditor({
   };
 
   const showGame = (nextIndex: number, moveFocus = true) => {
+    const boundedIndex = Math.max(0, Math.min(games.length - 1, nextIndex));
     focusHeadingAfterNavigation.current = moveFocus;
     setValidationAttempted(false);
     setNotice("");
-    setIndex(Math.max(0, Math.min(games.length - 1, nextIndex)));
+    setIndex(boundedIndex);
+    if (moveFocus && boundedIndex === index) {
+      focusHeadingAfterNavigation.current = false;
+      globalThis.requestAnimationFrame(() => gameHeadingRef.current?.focus());
+    }
   };
 
   useEffect(() => {
@@ -321,13 +326,45 @@ export function HouseEditor({
               {percent}%
             </progress>
           </div>
-          <div class="setup-game-list" role="navigation" aria-label="Games to set up">
-            {gameNavigation.map(({ game, gameIndex }) => (
+          <p class="sr-only" id="setup-game-navigation-help">
+            Use the arrow keys to move through games. Press Enter or Space to open the selected
+            questionnaire.
+          </p>
+          <div
+            class="setup-game-list"
+            role="navigation"
+            aria-label="Games to set up"
+            aria-describedby="setup-game-navigation-help"
+          >
+            {gameNavigation.map(({ game, gameIndex }, navigationIndex) => (
               <button
                 type="button"
                 class={gameIndex === index ? "is-current" : ""}
                 aria-current={gameIndex === index ? "step" : undefined}
+                tabIndex={gameIndex === index ? 0 : -1}
                 onClick={() => showGame(gameIndex)}
+                onKeyDown={(event) => {
+                  let nextNavigationIndex: number | undefined;
+                  if (event.key === "ArrowDown" || event.key === "ArrowRight") {
+                    nextNavigationIndex = Math.min(navigationIndex + 1, gameNavigation.length - 1);
+                  } else if (event.key === "ArrowUp" || event.key === "ArrowLeft") {
+                    nextNavigationIndex = Math.max(navigationIndex - 1, 0);
+                  } else if (event.key === "Home") {
+                    nextNavigationIndex = 0;
+                  } else if (event.key === "End") {
+                    nextNavigationIndex = gameNavigation.length - 1;
+                  }
+                  if (nextNavigationIndex === undefined) return;
+                  event.preventDefault();
+                  if (nextNavigationIndex === navigationIndex) return;
+                  const next = gameNavigation[nextNavigationIndex];
+                  showGame(next.gameIndex, false);
+                  globalThis.requestAnimationFrame(() => {
+                    setupNavigatorRef.current
+                      ?.querySelectorAll<globalThis.HTMLButtonElement>(".setup-game-list button")
+                      [nextNavigationIndex]?.focus();
+                  });
+                }}
                 key={game.slug}
               >
                 <span>{game.title}</span>

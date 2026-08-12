@@ -1013,21 +1013,29 @@ output {
 }
 
 .roulette-slice:hover path,
-.roulette-slice:focus path {
+.roulette-slice[aria-selected="true"] path {
   filter: brightness(1.16) saturate(1.08);
   stroke: white;
   stroke-width: 1.5;
 }
 
-.roulette-slice text {
-  fill: #281b3c;
+.roulette-slice-label rect {
+  fill: rgba(38, 25, 67, 0.94);
+  stroke: rgba(255, 255, 255, 0.9);
+  stroke-width: 0.45px;
+}
+
+.roulette-slice-label text {
+  fill: #fff;
   font-size: 3px;
   font-weight: 850;
-  paint-order: stroke;
   pointer-events: none;
-  stroke: rgba(255, 255, 255, 0.82);
-  stroke-width: 0.7px;
-  stroke-linejoin: round;
+}
+
+.roulette-wheel:focus-visible {
+  outline: 3px solid var(--mint);
+  outline-offset: -6px;
+  border-radius: 50%;
 }
 
 .roulette-pointer {
@@ -1855,7 +1863,7 @@ footer p {
 }
 
 @media (max-width: 520px) {
-  .roulette-slice text {
+  .roulette-slice-label {
     display: none;
   }
 
