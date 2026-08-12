@@ -32,6 +32,18 @@ export function SetupAccessGate() {
       message: "GitHub collaborator verification expired or was withdrawn. Please verify again."
     });
   }, []);
+  const startVerification = useCallback(async () => {
+    if (!serviceUrl) return;
+    try {
+      await beginSetupVerification(serviceUrl);
+    } catch {
+      setState({
+        kind: "failed",
+        message:
+          "This browser could not safely save the temporary verification details. Check its storage permissions and try again."
+      });
+    }
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -178,10 +190,7 @@ export function SetupAccessGate() {
           <>
             <h1 id="setup-access-title">We couldn’t verify collaborator access</h1>
             <p role="alert">{state.message}</p>
-            <button
-              class="primary-button"
-              onClick={() => serviceUrl && void beginSetupVerification(serviceUrl)}
-            >
+            <button class="primary-button" onClick={() => void startVerification()}>
               Try GitHub verification again
             </button>
           </>
@@ -192,10 +201,7 @@ export function SetupAccessGate() {
               Sign in with GitHub. The setup questionnaire stays hidden unless this account can edit
               this library.
             </p>
-            <button
-              class="primary-button"
-              onClick={() => serviceUrl && void beginSetupVerification(serviceUrl)}
-            >
+            <button class="primary-button" onClick={() => void startVerification()}>
               Verify with GitHub
             </button>
           </>

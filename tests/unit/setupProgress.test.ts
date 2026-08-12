@@ -25,6 +25,22 @@ class MemoryStorage {
   }
 }
 
+const withUnavailableLocalStorage = (action: () => void) => {
+  const descriptor = Object.getOwnPropertyDescriptor(globalThis, "localStorage");
+  Object.defineProperty(globalThis, "localStorage", {
+    configurable: true,
+    get() {
+      throw new globalThis.DOMException("Storage access denied", "SecurityError");
+    }
+  });
+  try {
+    action();
+  } finally {
+    if (descriptor) Object.defineProperty(globalThis, "localStorage", descriptor);
+    else Reflect.deleteProperty(globalThis, "localStorage");
+  }
+};
+
 describe("Setup progress storage", () => {
   it("stores and restores current progress with its inventory revision", () => {
     const storage = new MemoryStorage();
@@ -71,5 +87,17 @@ describe("Setup progress storage", () => {
     storeSetupProgress({ answers: {}, completedSlugs: [] }, sourceSha, storage);
     clearSetupProgress(storage);
     expect(storage.getItem(BROWSER_STORAGE_KEYS.setupProgress)).toBeNull();
+  });
+
+  it("starts fresh when browser policy blocks localStorage itself", () => {
+    withUnavailableLocalStorage(() => {
+      expect(readSetupProgress()).toEqual({
+        progress: { answers: {}, completedSlugs: [] }
+      });
+      expect(() => clearSetupProgress()).not.toThrow();
+      expect(() => storeSetupProgress({ answers: {}, completedSlugs: [] }, sourceSha)).toThrow(
+        /Storage access denied/
+      );
+    });
   });
 });

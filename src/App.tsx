@@ -11,7 +11,7 @@ import { SiteFooter } from "./SiteFooter";
 import { buildAppUrl, parseAppView, type AppView } from "./lib/appNavigation";
 import { BROWSER_STORAGE_KEYS, clearLegacyBrowserState } from "./lib/browserStorage";
 import { createStandalonePlayModes, filterAndScore, sortScoredGames } from "./lib/catalog";
-import { DEMO_GAMES, DEMO_GAME_SLUGS } from "./lib/demoCatalog";
+import { DEMO_GAMES } from "./lib/demoCatalog";
 import { DEFAULT_PREFERENCES, parsePreferences, serializePreferences } from "./lib/preferences";
 import { clearSetupProgress } from "./lib/setupProgress";
 import type { CatalogPayload, GroupPreferences, SortKey } from "./types";
@@ -180,6 +180,17 @@ export function App() {
     () => (demoMode ? DEMO_GAMES : createStandalonePlayModes(payload?.games ?? [])),
     [demoMode, payload]
   );
+
+  useEffect(() => {
+    if (!payload) return;
+    const activeSlugs = new Set(games.map((game) => game.slug));
+    setDrawnState((current) => {
+      const pruned = current.filter((slug) => activeSlugs.has(slug));
+      if (pruned.length === current.length) return current;
+      storeLocally(BROWSER_STORAGE_KEYS.rouletteDrawn, JSON.stringify(pruned));
+      return pruned;
+    });
+  }, [games, payload]);
   const scored = useMemo(
     () => sortScoredGames(filterAndScore(games, preferences), preferences.sort),
     [games, preferences]
@@ -385,7 +396,7 @@ export function App() {
                         <GameCard
                           entry={entry}
                           key={entry.game.slug}
-                          demo={DEMO_GAME_SLUGS.has(entry.game.slug)}
+                          demo={demoMode}
                           onInspect={(trigger) => {
                             inspectorTrigger.current = trigger;
                             setInspectedSlug(entry.game.slug);
@@ -400,11 +411,7 @@ export function App() {
             {inspectedEntry && (
               <>
                 <div class="inspector-backdrop" aria-hidden="true" onClick={closeInspector} />
-                <GameInspector
-                  entry={inspectedEntry}
-                  demo={DEMO_GAME_SLUGS.has(inspectedEntry.game.slug)}
-                  onClose={closeInspector}
-                />
+                <GameInspector entry={inspectedEntry} demo={demoMode} onClose={closeInspector} />
               </>
             )}
           </div>
