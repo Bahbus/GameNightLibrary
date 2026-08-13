@@ -327,7 +327,7 @@ export function HouseEditor({
             </progress>
           </div>
           <p class="sr-only" id="setup-game-navigation-help">
-            Use the arrow keys to move through games. Press Enter or Space to open the selected
+            Use the arrow keys to select a game. Press Enter or Space to move into its
             questionnaire.
           </p>
           <div

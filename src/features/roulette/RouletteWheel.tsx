@@ -1,5 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
-import { createRouletteSlices, type RouletteSlice } from "../../lib/rouletteWheel";
+import {
+  createRouletteLabelLayout,
+  createRouletteSlices,
+  type RouletteSlice
+} from "../../lib/rouletteWheel";
 import type { ScoredGame } from "../../types";
 
 const COLORS = [
@@ -31,8 +35,6 @@ const slicePath = ({ startAngle, endAngle }: RouletteSlice) => {
   const largeArc = endAngle - startAngle > 180 ? 1 : 0;
   return `M 50 50 L ${start.x} ${start.y} A 49 49 0 ${largeArc} 1 ${end.x} ${end.y} Z`;
 };
-
-const shortLabel = (name: string) => (name.length > 18 ? `${name.slice(0, 16)}…` : name);
 
 export function RouletteWheel({
   games,
@@ -74,15 +76,12 @@ export function RouletteWheel({
 
   const handleWheelKey = (event: globalThis.KeyboardEvent) => {
     if (!slices.length || revealing) return;
-    const currentIndex = Math.max(
-      0,
-      slices.findIndex((slice) => slice.entry.game.slug === selectedSlug)
-    );
+    const currentIndex = slices.findIndex((slice) => slice.entry.game.slug === selectedSlug);
     let nextIndex: number | undefined;
     if (event.key === "ArrowRight" || event.key === "ArrowDown") {
-      nextIndex = Math.min(currentIndex + 1, slices.length - 1);
+      nextIndex = Math.min(Math.max(currentIndex + 1, 0), slices.length - 1);
     } else if (event.key === "ArrowLeft" || event.key === "ArrowUp") {
-      nextIndex = Math.max(currentIndex - 1, 0);
+      nextIndex = currentIndex < 0 ? slices.length - 1 : Math.max(currentIndex - 1, 0);
     } else if (event.key === "Home") {
       nextIndex = 0;
     } else if (event.key === "End") {
@@ -127,10 +126,11 @@ export function RouletteWheel({
         >
           {slices.map((slice, index) => {
             const percentage = slice.probability * 100;
-            const labelPoint = point(slice.centerAngle, 33);
-            const showLabel = percentage >= 9 && slices.length <= 12;
-            const label = shortLabel(slice.entry.game.name);
-            const labelWidth = Math.min(42, Math.max(16, label.length * 2.25));
+            const labelLayout = createRouletteLabelLayout(
+              slice.entry.game.name,
+              slice.endAngle - slice.startAngle
+            );
+            const labelPoint = point(slice.centerAngle, labelLayout?.radius ?? 0);
             return (
               <g
                 id={`roulette-slice-${slice.entry.game.slug}`}
@@ -153,26 +153,28 @@ export function RouletteWheel({
                 key={slice.entry.game.slug}
               >
                 <path d={slicePath(slice)} fill={COLORS[index % COLORS.length]} />
-                {showLabel && (
+                {labelLayout && (
                   <g
                     class="roulette-slice-label"
                     aria-hidden="true"
-                    transform={`rotate(${-rotation} ${labelPoint.x} ${labelPoint.y})`}
+                    transform={`rotate(${slice.centerAngle} ${labelPoint.x} ${labelPoint.y})`}
                   >
-                    <rect
-                      x={labelPoint.x - labelWidth / 2}
-                      y={labelPoint.y - 3.5}
-                      width={labelWidth}
-                      height="7"
-                      rx="2.4"
-                    />
                     <text
                       x={labelPoint.x}
                       y={labelPoint.y}
+                      font-size={labelLayout.fontSize}
                       text-anchor="middle"
                       dominant-baseline="middle"
                     >
-                      {label}
+                      {labelLayout.lines.map((line, lineIndex) => (
+                        <tspan
+                          x={labelPoint.x}
+                          dy={lineIndex === 0 ? 0 : labelLayout.lineHeight}
+                          key={`${line}-${lineIndex}`}
+                        >
+                          {line}
+                        </tspan>
+                      ))}
                     </text>
                   </g>
                 )}

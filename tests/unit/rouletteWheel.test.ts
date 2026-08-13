@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { createRouletteSlices, nextWheelRotation } from "../../src/lib/rouletteWheel";
+import {
+  createRouletteLabelLayout,
+  createRouletteSlices,
+  nextWheelRotation
+} from "../../src/lib/rouletteWheel";
 import type { ScoredGame } from "../../src/types";
 import { catalogFixture } from "../fixtures/catalog";
 
@@ -35,5 +39,16 @@ describe("weighted roulette wheel", () => {
 
     expect(rotation - current).toBeGreaterThanOrEqual(4 * 360);
     expect((((rotation + winnerCenter) % 360) + 360) % 360).toBeCloseTo(0, 10);
+  });
+
+  it("wraps wheel labels more aggressively as slices narrow", () => {
+    const wide = createRouletteLabelLayout("Forest Council Fox Den", 95)!;
+    const medium = createRouletteLabelLayout("Forest Council Fox Den", 34)!;
+    const narrow = createRouletteLabelLayout("Forest Council Fox Den", 12)!;
+
+    expect(wide.lines.length).toBeLessThan(medium.lines.length);
+    expect(medium.lines.length).toBeLessThan(narrow.lines.length);
+    expect(wide.fontSize).toBeGreaterThan(narrow.fontSize);
+    expect(createRouletteLabelLayout("Too Narrow", 6)).toBeUndefined();
   });
 });

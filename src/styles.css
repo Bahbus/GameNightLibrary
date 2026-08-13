@@ -1019,17 +1019,14 @@ output {
   stroke-width: 1.5;
 }
 
-.roulette-slice-label rect {
-  fill: rgba(38, 25, 67, 0.94);
-  stroke: rgba(255, 255, 255, 0.9);
-  stroke-width: 0.45px;
-}
-
 .roulette-slice-label text {
-  fill: #fff;
-  font-size: 3px;
+  fill: #27183f;
   font-weight: 850;
+  paint-order: stroke;
   pointer-events: none;
+  stroke: #efb640;
+  stroke-linejoin: round;
+  stroke-width: 0.62px;
 }
 
 .roulette-wheel:focus-visible {
@@ -1863,10 +1860,6 @@ footer p {
 }
 
 @media (max-width: 520px) {
-  .roulette-slice-label {
-    display: none;
-  }
-
   nav button {
     min-width: calc(33.333% - 0.5rem);
     font-size: 0.82rem;

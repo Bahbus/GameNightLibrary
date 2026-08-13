@@ -363,20 +363,20 @@ test("reveals a weighted roulette result and supports reset", async ({ page }) =
   await expect(slices.last()).toHaveAttribute("aria-selected", "true");
   await wheel.press("ArrowLeft");
   await expect(slices.nth(1)).toHaveAttribute("aria-selected", "true");
+  await wheel.press("Escape");
+  await expect(wheel).not.toHaveAttribute("aria-activedescendant");
+  await wheel.press("ArrowRight");
+  await expect(slices.first()).toHaveAttribute("aria-selected", "true");
   expect(
     await slices.evaluateAll((items) => items.filter((item) => item.tabIndex >= 0).length)
   ).toBe(0);
   const wheelLabels = page.locator(".roulette-slice-label");
-  if ((page.viewportSize()?.width ?? 0) <= 520) {
-    await expect(wheelLabels.first()).toBeHidden();
-  } else {
-    await expect(wheelLabels.first()).toBeVisible();
-    const labelColors = await wheelLabels.first().evaluate((label) => ({
-      background: globalThis.getComputedStyle(label.querySelector("rect")!).fill,
-      text: globalThis.getComputedStyle(label.querySelector("text")!).fill
-    }));
-    expect(labelColors.background).not.toBe(labelColors.text);
-  }
+  await expect(wheelLabels.first()).toBeVisible();
+  const labelColors = await wheelLabels.first().evaluate((label) => {
+    const style = globalThis.getComputedStyle(label.querySelector("text")!);
+    return { fill: style.fill, stroke: style.stroke };
+  });
+  expect(labelColors.fill).not.toBe(labelColors.stroke);
   const wheelBox = await page.locator(".roulette-wheel-shell").boundingBox();
   const stageBox = await page.locator(".roulette-stage").boundingBox();
   expect(wheelBox!.width).toBeLessThanOrEqual(stageBox!.width + 1);
