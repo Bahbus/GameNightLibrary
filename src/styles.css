@@ -43,6 +43,7 @@
   --danger: #9d2813;
   --overlay: rgb(35 27 51 / 55%);
   --button-ink: #231b33;
+  --roulette-label-outline: #ffffff;
   --shadow: 0 14px 45px rgba(43, 28, 68, 0.12);
 }
 
@@ -81,6 +82,7 @@
     --warning-line: #b47c25;
     --danger: #ff9d91;
     --overlay: rgb(8 6 11 / 72%);
+    --roulette-label-outline: #efb640;
     --shadow: 0 14px 45px rgba(0, 0, 0, 0.34);
   }
 }
@@ -1087,7 +1089,7 @@ output {
   font-weight: 850;
   paint-order: stroke;
   pointer-events: none;
-  stroke: #efb640;
+  stroke: var(--roulette-label-outline);
   stroke-linejoin: round;
   stroke-width: 0.62px;
 }
