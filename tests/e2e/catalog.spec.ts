@@ -122,6 +122,11 @@ test("follows the browser color preference without storing a theme choice", asyn
     };
   });
   expect(lightTheme.colorScheme).toBe("light");
+  await page.getByRole("button", { name: "Roulette", exact: true }).click();
+  await expect(page.locator(".roulette-slice-label text").first()).toHaveCSS(
+    "stroke",
+    "rgb(255, 255, 255)"
+  );
 
   await page.emulateMedia({ colorScheme: "dark" });
   await expect
@@ -138,6 +143,10 @@ test("follows the browser color preference without storing a theme choice", asyn
     .toEqual({ colorScheme: "dark", background: "#17131d", surface: "#241d2b" });
   expect(lightTheme.background).not.toBe("#17131d");
   expect(lightTheme.surface).not.toBe("#241d2b");
+  await expect(page.locator(".roulette-slice-label text").first()).toHaveCSS(
+    "stroke",
+    "rgb(239, 182, 64)"
+  );
   expect(
     await page.evaluate(() => globalThis.localStorage.getItem("game-night-library:theme"))
   ).toBeNull();
