@@ -465,6 +465,32 @@ test("keeps the roulette heading centered as the stacked card widens", async ({
   }
 });
 
+test("keeps roulette counters distributed as the viewport widens", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "Responsive roulette contract");
+  await page.emulateMedia({ reducedMotion: "reduce" });
+
+  let previousWidth = 0;
+  for (const width of [1280, 1499, 1500, 1720]) {
+    await page.setViewportSize({ width, height: 1000 });
+    await page.getByRole("button", { name: "Roulette", exact: true }).click();
+
+    const measurement = await page.locator(".odds-note").evaluate((element) => {
+      const container = element.getBoundingClientRect();
+      const centers = [...element.querySelectorAll("span")].map((span) => {
+        const rect = span.getBoundingClientRect();
+        return (rect.left + rect.width / 2 - container.left) / container.width;
+      });
+      return { width: container.width, centers };
+    });
+
+    expect(measurement.width).toBeGreaterThanOrEqual(previousWidth - 1);
+    expect(measurement.centers[0]).toBeCloseTo(1 / 6, 1);
+    expect(measurement.centers[1]).toBeCloseTo(1 / 2, 1);
+    expect(measurement.centers[2]).toBeCloseTo(5 / 6, 1);
+    previousWidth = measurement.width;
+  }
+});
+
 test("eases structural breakpoint shifts and respects reduced motion", async ({
   page
 }, testInfo) => {
