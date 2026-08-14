@@ -4,6 +4,7 @@ import {
   effectiveModes,
   filterAndScore,
   isEligible,
+  roulettePool,
   scoreGame,
   weightedDraw
 } from "../../src/lib/catalog";
@@ -112,6 +113,18 @@ describe("catalog filtering and scoring", () => {
     expect(
       weightedDraw(games, new Set(["forest-council", "rocket-racers"]), () => 0)?.game.slug
     ).toBe("forest-council");
+  });
+
+  it("uses the same remaining pool for displayed odds and weighted draws", () => {
+    const games = filterAndScore([forest, racers], DEFAULT_PREFERENCES);
+    expect(
+      roulettePool(games, new Set(["forest-council"])).map((entry) => entry.game.slug)
+    ).toEqual(["rocket-racers"]);
+    expect(
+      roulettePool(games, new Set(["forest-council", "rocket-racers"])).map(
+        (entry) => entry.game.slug
+      )
+    ).toEqual(["forest-council", "rocket-racers"]);
   });
 
   it("uses exact cumulative weight boundaries for deterministic draws", () => {

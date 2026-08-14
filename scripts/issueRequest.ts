@@ -20,13 +20,13 @@ export function fieldsFromIssue(body: string): Map<string, string> {
 export function requestDecision({
   association,
   approved,
-  hasInventoryLabel
+  hasRequestLabel
 }: {
   association: AuthorAssociation;
   approved: boolean;
-  hasInventoryLabel: boolean;
+  hasRequestLabel: boolean;
 }): "automate" | "suggestion" | "ignore" {
-  if (!hasInventoryLabel) return "ignore";
+  if (!hasRequestLabel) return "ignore";
   if (["OWNER", "MEMBER", "COLLABORATOR"].includes(association) || approved) {
     return "automate";
   }

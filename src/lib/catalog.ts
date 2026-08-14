@@ -286,8 +286,7 @@ export function weightedDraw(
   excludedSlugs: Set<string>,
   random: RandomUnit = cryptoRandomUnit
 ): ScoredGame | undefined {
-  let candidates = games.filter((entry) => !excludedSlugs.has(entry.game.slug));
-  if (!candidates.length) candidates = games;
+  const candidates = roulettePool(games, excludedSlugs);
   if (!candidates.length) return undefined;
 
   const total = candidates.reduce((sum, entry) => sum + entry.rouletteWeight, 0);
@@ -297,6 +296,11 @@ export function weightedDraw(
     if (needle < 0) return candidate;
   }
   return candidates[candidates.length - 1];
+}
+
+export function roulettePool(games: ScoredGame[], excludedSlugs: Set<string>): ScoredGame[] {
+  const remaining = games.filter((entry) => !excludedSlugs.has(entry.game.slug));
+  return remaining.length ? remaining : games;
 }
 
 export function createStandalonePlayModes(games: CatalogGame[]): CatalogGame[] {
