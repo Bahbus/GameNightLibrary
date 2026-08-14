@@ -344,7 +344,12 @@ test("uses wide screens for persistent filters and a denser catalog", async ({
   await page.getByRole("button", { name: "Roulette" }).click();
   const rouletteBox = await page.getByRole("region", { name: "Game Night Roulette" }).boundingBox();
   const rouletteFilterBox = await filter.boundingBox();
+  const rouletteWheelBox = await page.locator(".roulette-wheel-shell").boundingBox();
+  const rouletteStageBox = await page.locator(".roulette-stage").boundingBox();
   expect(rouletteFilterBox!.x).toBeLessThan(rouletteBox!.x);
+  expect(rouletteWheelBox!.width).toBeGreaterThanOrEqual(760);
+  expect(rouletteWheelBox!.height).toBeCloseTo(rouletteWheelBox!.width, 0);
+  expect(rouletteStageBox!.height).toBeGreaterThanOrEqual(800);
 });
 
 test("reveals a weighted roulette result and supports reset", async ({ page }) => {

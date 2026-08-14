@@ -1610,6 +1610,26 @@ footer p {
   }
 }
 
+@media (min-width: 1500px) and (min-height: 900px) {
+  .discovery-layout-roulette {
+    --roulette-large-size: clamp(600px, calc(100vh - 300px), 800px);
+  }
+
+  .discovery-layout-roulette .roulette-card {
+    grid-template-columns: minmax(340px, 0.55fr) minmax(0, 1.45fr);
+    gap: 1.5rem;
+    padding: 2rem;
+  }
+
+  .discovery-layout-roulette .roulette-stage {
+    min-height: var(--roulette-large-size);
+  }
+
+  .discovery-layout-roulette .roulette-wheel-shell {
+    width: min(100%, var(--roulette-large-size));
+  }
+}
+
 @media (min-width: 1720px) {
   .discovery-layout-library .game-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
