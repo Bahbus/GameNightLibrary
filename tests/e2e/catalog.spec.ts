@@ -434,6 +434,28 @@ test("keeps the roulette wheel from shrinking across wider breakpoints", async (
   expectNondecreasing(await measureWidths([1499, 1500, 1720], 850));
 });
 
+test("keeps the roulette heading centered as the stacked card widens", async ({
+  page
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "Responsive breakpoint contract");
+
+  for (const width of [680, 941, 1280, 1499, 1720]) {
+    await page.setViewportSize({ width, height: 850 });
+    await page.getByRole("button", { name: "Roulette", exact: true }).click();
+
+    const cardBox = await page.getByRole("region", { name: "Game Night Roulette" }).boundingBox();
+    const headingBox = await page
+      .getByRole("heading", { name: "Game Night Roulette" })
+      .boundingBox();
+    expect(cardBox).not.toBeNull();
+    expect(headingBox).not.toBeNull();
+
+    const cardCenter = cardBox!.x + cardBox!.width / 2;
+    const headingCenter = headingBox!.x + headingBox!.width / 2;
+    expect(Math.abs(cardCenter - headingCenter)).toBeLessThanOrEqual(1);
+  }
+});
+
 test("reveals a weighted roulette result and supports reset", async ({ page }) => {
   await page.getByRole("button", { name: "Roulette" }).click();
   const wheel = page.getByRole("listbox", { name: /Weighted roulette odds/ });

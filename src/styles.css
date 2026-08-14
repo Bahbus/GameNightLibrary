@@ -1002,6 +1002,7 @@ output {
 }
 
 .roulette-copy h1 {
+  margin-inline: auto;
   margin-bottom: 0.75rem;
   font-size: clamp(2rem, 5vw, 3.8rem);
   line-height: 1;
