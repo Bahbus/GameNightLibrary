@@ -924,7 +924,6 @@ output {
 }
 
 .roulette-card {
-  --roulette-size: clamp(270px, 82vw, 560px);
   display: grid;
   grid-template-columns: 0.9fr 1.1fr;
   gap: 2rem;
@@ -970,14 +969,14 @@ output {
 
 .roulette-stage {
   position: relative;
-  min-height: var(--roulette-size);
+  min-height: clamp(300px, 35vw, 560px);
   display: grid;
   place-items: center;
 }
 
 .roulette-wheel-shell {
   position: absolute;
-  width: min(100%, var(--roulette-size));
+  width: min(100%, clamp(270px, 35vw, 520px));
   aspect-ratio: 1;
 }
 
@@ -1631,22 +1630,6 @@ footer p {
   }
 }
 
-@media (min-width: 941px) and (max-width: 1499px) {
-  .discovery-layout-roulette .roulette-card {
-    grid-template-columns: 1fr;
-  }
-
-  .discovery-layout-roulette .roulette-copy {
-    text-align: center;
-  }
-
-  .discovery-layout-roulette .odds-note,
-  .discovery-layout-roulette .roulette-actions {
-    justify-content: center;
-    margin-inline: auto;
-  }
-}
-
 @media (min-width: 1720px) {
   .discovery-layout-library .game-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -1876,6 +1859,14 @@ footer p {
   .roulette-card {
     padding: 1.05rem 1.3rem;
     border-radius: 1.3rem;
+  }
+
+  .roulette-stage {
+    min-height: min(86vw, 420px);
+  }
+
+  .roulette-wheel-shell {
+    width: min(100%, 82vw);
   }
 
   .match-explanation,
