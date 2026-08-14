@@ -9,6 +9,11 @@ updates:
       npm-dependencies:
         patterns: ["*"]
         update-types: ["minor", "patch"]
+    # TypeScript 7 is not yet supported by the current typescript-eslint release.
+    # Keep receiving compatible TypeScript 6 updates until that peer range advances.
+    ignore:
+      - dependency-name: typescript
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: github-actions
     directory: /
     schedule:
@@ -22,3 +27,8 @@ updates:
     schedule:
       interval: weekly
       day: monday
+    # Node 26 remains a Current release and is not yet a Vercel Functions runtime.
+    # Continue receiving Node 24 image updates until Node 26 is production-ready here.
+    ignore:
+      - dependency-name: node
+        update-types: ["version-update:semver-major"]

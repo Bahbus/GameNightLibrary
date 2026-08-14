@@ -50,11 +50,35 @@ describe("runtime and tooling boundaries", () => {
 
   it("keeps the pinned service image on weekly Dependabot updates", async () => {
     const config = parse(await readFile(".github/dependabot.yml", "utf8")) as {
-      updates: Array<{ "package-ecosystem": string; directory: string }>;
+      updates: Array<{
+        "package-ecosystem": string;
+        directory: string;
+        ignore?: Array<{ "dependency-name": string; "update-types": string[] }>;
+      }>;
     };
 
     expect(config.updates).toContainEqual(
       expect.objectContaining({ "package-ecosystem": "docker", directory: "/" })
     );
+  });
+
+  it("defers unsupported major toolchain upgrades without blocking current majors", async () => {
+    const config = parse(await readFile(".github/dependabot.yml", "utf8")) as {
+      updates: Array<{
+        "package-ecosystem": string;
+        ignore?: Array<{ "dependency-name": string; "update-types": string[] }>;
+      }>;
+    };
+    const npm = config.updates.find((update) => update["package-ecosystem"] === "npm");
+    const docker = config.updates.find((update) => update["package-ecosystem"] === "docker");
+
+    expect(npm?.ignore).toContainEqual({
+      "dependency-name": "typescript",
+      "update-types": ["version-update:semver-major"]
+    });
+    expect(docker?.ignore).toContainEqual({
+      "dependency-name": "node",
+      "update-types": ["version-update:semver-major"]
+    });
   });
 });
