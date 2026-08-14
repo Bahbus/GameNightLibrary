@@ -5,7 +5,6 @@ export type * from "../shared/inventory/types";
 export type SortKey = "name" | "bggRating" | "complexity" | "duration" | "players" | "houseRating";
 
 export interface GroupPreferences {
-  version: 1;
   query: string;
   players?: number;
   maxMinutes?: number;

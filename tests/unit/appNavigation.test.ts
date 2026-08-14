@@ -4,7 +4,7 @@ import { DEFAULT_PREFERENCES } from "../../src/lib/preferences";
 
 describe("application navigation", () => {
   it("reads supported views and falls back safely", () => {
-    expect(parseAppView("?v=1&view=roulette")).toBe("roulette");
+    expect(parseAppView("?view=roulette")).toBe("roulette");
     expect(parseAppView("view=wishlist")).toBe("wishlist");
     expect(parseAppView("?view=unknown")).toBe("library");
   });
@@ -12,10 +12,16 @@ describe("application navigation", () => {
   it("preserves filter settings in view links", () => {
     const preferences = { ...DEFAULT_PREFERENCES, players: 6 };
     expect(buildAppUrl("/GameNightLibrary/", preferences, "roulette")).toBe(
-      "/GameNightLibrary/?v=1&players=6&view=roulette"
+      "/GameNightLibrary/?players=6&view=roulette"
     );
     expect(buildAppUrl("/GameNightLibrary/", preferences, "library")).toBe(
-      "/GameNightLibrary/?v=1&players=6"
+      "/GameNightLibrary/?players=6"
+    );
+  });
+
+  it("uses the bare application path for default library state", () => {
+    expect(buildAppUrl("/GameNightLibrary/", DEFAULT_PREFERENCES, "library")).toBe(
+      "/GameNightLibrary/"
     );
   });
 });

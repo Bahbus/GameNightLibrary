@@ -1,6 +1,8 @@
-import { useEffect, useRef, useState } from "preact/hooks";
-import { weightedDraw } from "../../lib/catalog";
+import { useEffect, useMemo, useRef, useState } from "preact/hooks";
+import { roulettePool, weightedDraw } from "../../lib/catalog";
+import { createRouletteSlices, nextWheelRotation } from "../../lib/rouletteWheel";
 import type { ScoredGame } from "../../types";
+import { RouletteWheel } from "./RouletteWheel";
 
 export function Roulette({
   games,
@@ -13,18 +15,43 @@ export function Roulette({
 }) {
   const [winner, setWinner] = useState<ScoredGame>();
   const [revealing, setRevealing] = useState(false);
+  const [rotation, setRotation] = useState(0);
+  const [spinPool, setSpinPool] = useState<ScoredGame[]>();
   const timer = useRef<number>();
+  const drawnEligible = useMemo(
+    () => drawn.filter((slug) => games.some((entry) => entry.game.slug === slug)),
+    [drawn, games]
+  );
+  const candidates = useMemo(() => roulettePool(games, new Set(drawn)), [drawn, games]);
+  const displayedGames = revealing && spinPool ? spinPool : candidates;
+
+  const finishReveal = () => {
+    if (timer.current) window.clearTimeout(timer.current);
+    timer.current = undefined;
+    setRevealing(false);
+    setSpinPool(undefined);
+  };
 
   const draw = () => {
     if (timer.current) window.clearTimeout(timer.current);
     const result = weightedDraw(games, new Set(drawn));
     if (!result) return;
+    const currentPool = roulettePool(games, new Set(drawn));
+    const winnerSlice = createRouletteSlices(currentPool).find(
+      (slice) => slice.entry.game.slug === result.game.slug
+    );
     setWinner(result);
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    setSpinPool(currentPool);
+    if (winnerSlice) {
+      setRotation((current) => nextWheelRotation(current, winnerSlice.centerAngle));
+    }
     setRevealing(!reduced);
     if (!drawn.includes(result.game.slug)) setDrawn([...drawn, result.game.slug]);
     if (!reduced) {
-      timer.current = window.setTimeout(() => setRevealing(false), 1800);
+      timer.current = window.setTimeout(finishReveal, 1800);
+    } else {
+      setSpinPool(undefined);
     }
   };
 
@@ -47,14 +74,15 @@ export function Roulette({
         <p>Every qualifying game has a chance. Better preference matches get a stronger pull.</p>
         <div class="odds-note">
           <span>{games.length} eligible</span>
-          <span>{drawn.length} already drawn</span>
+          <span>{drawnEligible.length} already drawn</span>
+          <span>{candidates.length} in the next spin</span>
         </div>
         <div class="roulette-actions">
           <button class="primary-button" onClick={draw} disabled={!games.length || revealing}>
             {winner ? "Spin again" : "Spin the roulette"}
           </button>
           {revealing && (
-            <button class="secondary-button" onClick={() => setRevealing(false)}>
+            <button class="secondary-button" onClick={finishReveal}>
               Skip animation
             </button>
           )}
@@ -64,6 +92,7 @@ export function Roulette({
               onClick={() => {
                 setDrawn([]);
                 setWinner(undefined);
+                setSpinPool(undefined);
               }}
             >
               Reset draws
@@ -72,12 +101,7 @@ export function Roulette({
         </div>
       </div>
       <div class={`roulette-stage ${revealing ? "is-spinning" : ""}`}>
-        <div class="roulette-wheel" aria-hidden="true">
-          <span>♟</span>
-          <span>◆</span>
-          <span>⚄</span>
-          <span>★</span>
-        </div>
+        <RouletteWheel games={displayedGames} rotation={rotation} revealing={revealing} />
         <div class="winner-panel" aria-live="polite" aria-busy={revealing}>
           {!games.length ? (
             <>
@@ -107,7 +131,7 @@ export function Roulette({
         <div class="match-explanation">
           {good && good.length > 0 && (
             <div>
-              <h3>Why it fits</h3>
+              <h2>Why it fits</h2>
               <ul>
                 {good.map((item) => (
                   <li key={item.key}>{item.label}</li>
@@ -117,7 +141,7 @@ export function Roulette({
           )}
           {misses && misses.length > 0 && (
             <div>
-              <h3>Worth knowing</h3>
+              <h2>Worth knowing</h2>
               <ul>
                 {misses.map((item) => (
                   <li key={item.key}>{item.label} is a weaker match</li>

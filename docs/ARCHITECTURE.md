@@ -46,12 +46,26 @@ not BGG-supplied facts.
 
 The Preact application performs these operations locally:
 
-- parse and serialize versioned shareable preferences;
+- parse and serialize compact shareable preferences without a permanent URL version marker;
 - apply hard requirements;
 - calculate normalized soft-preference match scores;
 - sort and search eligible games;
 - select roulette results with `crypto.getRandomValues`;
-- store the latest unnamed settings and roulette exclusions in browser storage.
+- store the latest unnamed settings and roulette exclusions in current-format browser storage;
+- retain in-progress Setup answers for at most 30 days and only for the questionnaire revision that
+  created them;
+- provide a browser-only fictional demo catalog while Setup is required and the authored catalog is
+  empty.
+
+Browser state is intentionally current-only. Obsolete storage keys are deleted when the application
+starts, malformed values fall back safely, and Setup progress is cleared after submission or after a
+deployment reports Setup complete. No migration or backward-compatibility layer is maintained for
+pre-launch browser state or old share links.
+
+All browser storage access passes through `src/lib/browserStorage.ts`. Public preferences and
+roulette history use best-effort writes because those features remain usable without persistence.
+Setup authentication and progress writes remain strict so their owning interfaces can report that
+temporary verification details or questionnaire answers were not saved.
 
 The browser never receives the BGG API token, GitHub App private key, client secret, installation
 token, or service signing key. It does not directly write repository contents.
@@ -72,10 +86,16 @@ while reusing shared contracts. Browser compatibility modules may re-export shar
 parsers, but repository scripts import their owning shared domain directly rather than depending on
 the browser tree.
 
+Feature-owned browser presentation lives under `src/features`. The collaborator-only Setup route
+owns its questionnaire components and responsive styles there and is loaded as a separate browser
+chunk only when Setup is opened. Public catalog visitors therefore do not download the private
+questionnaire interface or its styles.
+
 ## Mutation boundaries
 
-Routine maintenance begins with a prefilled GitHub issue. Approved automation applies exactly one
-validated transaction to a branch and opens a pull request. It cannot approve or merge.
+Routine inventory and wish-list maintenance begins with a prefilled GitHub issue. Approved
+automation applies exactly one validated transaction to the corresponding canonical YAML file on a
+branch and opens a pull request. It cannot approve or merge.
 
 Guided Setup uses a separate service because GitHub Pages cannot safely hold credentials. The
 service verifies collaborator access with a short-lived GitHub App user token, immediately revokes

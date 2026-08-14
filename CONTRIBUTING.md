@@ -7,11 +7,11 @@ architecture links.
 Documentation is edited in this repository and reviewed like code. The public Wiki is generated
 from these files, so direct Wiki edits will be replaced automatically.
 
-## Inventory requests
+## Library requests
 
-Use the Maintain screen in the site or one of the repository's inventory issue forms.
-Maintainer requests may be turned into a pull request automatically. Public suggestions wait
-for a maintainer to apply the `approved-inventory-change` label.
+Use the Wish list or Manage screen in the site, or one of the repository's structured issue forms.
+Maintainer inventory and wish-list requests may be turned into pull requests automatically. Public
+suggestions wait for a maintainer to apply the `approved-inventory-change` label.
 
 Do not include private addresses, personal contact information, access instructions, or
 anything else that should not appear in a public repository.

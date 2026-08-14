@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "preact/compat";
 import { useCallback, useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { ExternalLink } from "./ExternalLink";
 import { GameCard } from "./features/catalog/CatalogGameCard";
@@ -6,16 +7,27 @@ import { FilterPanel } from "./features/discovery/FilterPanel";
 import { Maintenance } from "./features/maintenance/Maintenance";
 import { Roulette } from "./features/roulette/Roulette";
 import { WishlistPanel } from "./features/wishlist/WishlistPanel";
-import { SetupAccessGate } from "./SetupAccessGate";
 import { SiteFooter } from "./SiteFooter";
 import { buildAppUrl, parseAppView, type AppView } from "./lib/appNavigation";
+import {
+  BROWSER_STORAGE_KEYS,
+  clearLegacyBrowserState,
+  readBrowserValue,
+  removeBrowserValue,
+  tryWriteBrowserValue
+} from "./lib/browserStorage";
 import { createStandalonePlayModes, filterAndScore, sortScoredGames } from "./lib/catalog";
-import { DEFAULT_PREFERENCES, parsePreferences } from "./lib/preferences";
+import { DEMO_GAMES } from "./lib/demoCatalog";
+import { DEFAULT_PREFERENCES, parsePreferences, serializePreferences } from "./lib/preferences";
+import { clearSetupProgress } from "./lib/setupProgress";
 import type { CatalogPayload, GroupPreferences, SortKey } from "./types";
 
-const STORAGE_KEY = "board-game-inventory:preferences:v1";
-const DRAWN_KEY = "board-game-inventory:drawn:v1";
 const REPOSITORY_URL = __GITHUB_REPOSITORY_URL__;
+const SetupAccessGate = lazy(() =>
+  import("./features/setup/SetupAccessGate").then(({ SetupAccessGate }) => ({
+    default: SetupAccessGate
+  }))
+);
 
 const viewTitles: Record<AppView, string> = {
   library: "Library | Game Night Library",
@@ -25,12 +37,11 @@ const viewTitles: Record<AppView, string> = {
   setup: "Setup | Game Night Library"
 };
 
-const storeLocally = (key: string, value: unknown) => {
-  try {
-    localStorage.setItem(key, JSON.stringify(value));
-  } catch {
-    // Filtering and roulette still work when storage is unavailable or full.
-  }
+let legacyStateCleared = false;
+const prepareBrowserState = () => {
+  if (legacyStateCleared || typeof window === "undefined") return;
+  clearLegacyBrowserState();
+  legacyStateCleared = true;
 };
 
 const isSetupAuthCallback = () => {
@@ -41,12 +52,15 @@ const isSetupAuthCallback = () => {
 
 function initialPreferences(): GroupPreferences {
   if (typeof window === "undefined") return DEFAULT_PREFERENCES;
+  prepareBrowserState();
   const fromUrl = parsePreferences(window.location.search);
   if (window.location.search) return fromUrl;
+  const saved = readBrowserValue("local", BROWSER_STORAGE_KEYS.preferences);
+  if (saved === null) return DEFAULT_PREFERENCES;
   try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    return saved ? { ...DEFAULT_PREFERENCES, ...JSON.parse(saved) } : DEFAULT_PREFERENCES;
+    return parsePreferences(saved);
   } catch {
+    removeBrowserValue("local", BROWSER_STORAGE_KEYS.preferences);
     return DEFAULT_PREFERENCES;
   }
 }
@@ -67,9 +81,15 @@ export function App() {
   const [inspectedSlug, setInspectedSlug] = useState("");
   const inspectorTrigger = useRef<HTMLButtonElement>();
   const [drawn, setDrawnState] = useState<string[]>(() => {
+    prepareBrowserState();
+    const stored = readBrowserValue("local", BROWSER_STORAGE_KEYS.rouletteDrawn);
     try {
-      return JSON.parse(localStorage.getItem(DRAWN_KEY) ?? "[]");
+      const value = JSON.parse(stored ?? "[]") as unknown;
+      if (Array.isArray(value) && value.every((slug) => typeof slug === "string")) return value;
+      removeBrowserValue("local", BROWSER_STORAGE_KEYS.rouletteDrawn);
+      return [];
     } catch {
+      removeBrowserValue("local", BROWSER_STORAGE_KEYS.rouletteDrawn);
       return [];
     }
   });
@@ -111,7 +131,11 @@ export function App() {
   }, [payload, preferences, setupAuthCallback, view]);
 
   useEffect(() => {
-    storeLocally(STORAGE_KEY, preferences);
+    tryWriteBrowserValue(
+      "local",
+      BROWSER_STORAGE_KEYS.preferences,
+      serializePreferences(preferences)
+    );
     if (isSetupAuthCallback()) return;
     window.history.replaceState(null, "", buildAppUrl(window.location.pathname, preferences, view));
     setShareStatus("idle");
@@ -132,7 +156,7 @@ export function App() {
 
   const setDrawn = (next: string[]) => {
     setDrawnState(next);
-    storeLocally(DRAWN_KEY, next);
+    tryWriteBrowserValue("local", BROWSER_STORAGE_KEYS.rouletteDrawn, JSON.stringify(next));
   };
 
   const copyShareLink = async () => {
@@ -145,7 +169,22 @@ export function App() {
     }
   };
 
-  const games = useMemo(() => createStandalonePlayModes(payload?.games ?? []), [payload]);
+  const demoMode = Boolean(payload?.setupRequired && payload.games.length === 0);
+  const games = useMemo(
+    () => (demoMode ? DEMO_GAMES : createStandalonePlayModes(payload?.games ?? [])),
+    [demoMode, payload]
+  );
+
+  useEffect(() => {
+    if (!payload) return;
+    const activeSlugs = new Set(games.map((game) => game.slug));
+    setDrawnState((current) => {
+      const pruned = current.filter((slug) => activeSlugs.has(slug));
+      if (pruned.length === current.length) return current;
+      tryWriteBrowserValue("local", BROWSER_STORAGE_KEYS.rouletteDrawn, JSON.stringify(pruned));
+      return pruned;
+    });
+  }, [games, payload]);
   const scored = useMemo(
     () => sortScoredGames(filterAndScore(games, preferences), preferences.sort),
     [games, preferences]
@@ -161,6 +200,10 @@ export function App() {
   useEffect(() => {
     if (view !== "library" || (inspectedSlug && !inspectedEntry)) setInspectedSlug("");
   }, [inspectedEntry, inspectedSlug, view]);
+
+  useEffect(() => {
+    if (payload?.setupRequired === false) clearSetupProgress();
+  }, [payload?.setupRequired]);
   const stale = payload
     ? Date.now() - new Date(payload.refreshedAt).getTime() > 30 * 24 * 60 * 60 * 1000
     : false;
@@ -236,6 +279,16 @@ export function App() {
           </div>
         )}
 
+        {demoMode && (view === "library" || view === "roulette") && (
+          <div class="demo-banner" role="status">
+            <strong>You’re exploring fictional demo games.</strong>
+            <span>
+              Try the filters and roulette while Setup is underway. These examples disappear as soon
+              as the first real owned game is published.
+            </span>
+          </div>
+        )}
+
         {(view === "library" || view === "roulette") && (
           <div
             class={`discovery-layout discovery-layout-${view}${inspectedEntry ? " has-inspector" : ""}`}
@@ -307,7 +360,7 @@ export function App() {
                       <h3>We couldn’t open the library</h3>
                       <p>{error}</p>
                     </div>
-                  ) : payload && !payload.games.length ? (
+                  ) : payload && !games.length ? (
                     <div class="empty-state">
                       <span aria-hidden="true">♟</span>
                       <h3>The shelves are ready for their first game</h3>
@@ -337,6 +390,7 @@ export function App() {
                         <GameCard
                           entry={entry}
                           key={entry.game.slug}
+                          demo={demoMode}
                           onInspect={(trigger) => {
                             inspectorTrigger.current = trigger;
                             setInspectedSlug(entry.game.slug);
@@ -351,7 +405,7 @@ export function App() {
             {inspectedEntry && (
               <>
                 <div class="inspector-backdrop" aria-hidden="true" onClick={closeInspector} />
-                <GameInspector entry={inspectedEntry} onClose={closeInspector} />
+                <GameInspector entry={inspectedEntry} demo={demoMode} onClose={closeInspector} />
               </>
             )}
           </div>
@@ -361,7 +415,17 @@ export function App() {
 
         {view === "maintain" && <Maintenance games={payload?.games ?? []} />}
 
-        {view === "setup" && <SetupAccessGate />}
+        {view === "setup" && (
+          <Suspense
+            fallback={
+              <section class="setup-loading" aria-busy="true">
+                <span role="status">Opening secure setup…</span>
+              </section>
+            }
+          >
+            <SetupAccessGate />
+          </Suspense>
+        )}
       </main>
 
       <SiteFooter refreshedAt={payload?.refreshedAt} />

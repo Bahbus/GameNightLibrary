@@ -18,5 +18,6 @@ export function buildAppUrl(
 ): string {
   const params = new URLSearchParams(serializePreferences(preferences));
   if (view !== "library") params.set("view", view);
-  return `${pathname}?${params.toString()}`;
+  const search = params.toString();
+  return search ? `${pathname}?${search}` : pathname;
 }

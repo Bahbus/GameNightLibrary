@@ -27,17 +27,22 @@ inference does not describe the owned copy accurately.
 
 **Copy link** stores the current filters and preferences in the URL. Anyone opening that link sees
 the same group setup. The site also remembers the most recent settings in that browser, but it does
-not store named people or send preference data to an analytics service.
+not store named people or send preference data to an analytics service. Default settings use the
+clean site address; query parameters appear only for settings that differ from the defaults.
 
 ## Use weighted roulette
 
 Roulette draws from every eligible game. Stronger matches receive more weight, but every eligible
-game keeps a chance of selection. The result is chosen before the animation starts.
+game keeps a chance of selection. The wheel uses those exact weights: each slice occupies the same
+share of the circle as that game's chance in the current draw. Hover or keyboard-focus a slice to
+see its game, probability, and preference match. The result is chosen before the animation starts,
+then the wheel lands that selected slice beneath the pointer without altering the odds.
 
 After a draw:
 
 - the result explains its strongest matches and any unmet soft preferences;
 - rerolls temporarily exclude prior results until every currently eligible game has been drawn;
+- the wheel removes those prior results too, so it always depicts the pool used by the next spin;
 - after that pool is exhausted, Roulette resumes drawing from the full eligible pool;
 - **Reset session** restores the full eligible pool;
 - reduced-motion visitors receive the result immediately, and anyone can skip the animation.
@@ -45,7 +50,7 @@ After a draw:
 ## Browse the wish list
 
 Wish-list games are not owned and never participate in Library filters or Roulette. Use **Request a
-game** to enter a title, optional BGG or publisher link, and the reason it may fit. The site prepares
+game** to enter a title, a BGG ID or public product link, and the reason it may fit. The site prepares
 the request before handing the final submission to GitHub, where authentication and the public issue
 record are handled.
 
@@ -64,9 +69,15 @@ Setup collects private-to-the-household knowledge such as learned state, shelf l
 house rating, moods, accessibility considerations, and content notes. The questionnaire is hidden
 until the Setup service verifies that the signed-in GitHub user is a repository collaborator.
 
-Progress saves automatically in that browser. Submission creates a branch and pull request for
-review rather than changing the public inventory directly. When every required game is complete and
-the Setup pull request is merged, the Setup tab disappears on the next deployment.
+Progress saves automatically in that browser for up to 30 days and is tied to the current Setup
+questionnaire. It is removed after submission, when the questionnaire changes, or when Setup is no
+longer required. Submission creates a branch and pull request for review rather than changing the
+public inventory directly. When every required game is complete and the Setup pull request is
+merged, the Setup tab disappears on the next deployment.
+
+While Setup is still required and no owned games have been published, Library and Roulette show a
+small fictional demo collection. The examples are labeled as demos and disappear automatically as
+soon as the first real owned game reaches the catalog.
 
 ## Accessibility and privacy
 

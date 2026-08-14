@@ -53,12 +53,23 @@ export async function buildCatalogPayload({
       .flatMap((game) => [game.bggId, ...game.expansions.map((expansion) => expansion.bggId)])
       .filter((id): id is number => id !== undefined)
   );
+  const ownedSourceUrls = new Set(
+    inventory.games
+      .flatMap((game) => [
+        game.sourceUrl,
+        ...game.expansions.map((expansion) => expansion.sourceUrl)
+      ])
+      .filter((url): url is string => url !== undefined)
+  );
   for (const game of wishlist.games) {
     if (ownedSlugs.has(game.slug)) {
       throw new Error(`Wishlist slug is already owned: ${game.slug}`);
     }
     if (game.bggId !== undefined && ownedBggIds.has(game.bggId)) {
       throw new Error(`Wishlist BGG ID is already owned: ${game.bggId}`);
+    }
+    if (game.sourceUrl && ownedSourceUrls.has(game.sourceUrl)) {
+      throw new Error(`Wishlist source URL is already owned: ${game.sourceUrl}`);
     }
   }
   const ids = [

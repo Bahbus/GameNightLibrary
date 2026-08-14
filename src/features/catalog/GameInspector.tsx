@@ -22,7 +22,15 @@ function useMediaQuery(query: string) {
   return matches;
 }
 
-export function GameInspector({ entry, onClose }: { entry: ScoredGame; onClose: () => void }) {
+export function GameInspector({
+  entry,
+  onClose,
+  demo = false
+}: {
+  entry: ScoredGame;
+  onClose: () => void;
+  demo?: boolean;
+}) {
   const { game } = entry;
   const values = effectiveValues(game);
   const closeButton = useRef<globalThis.HTMLButtonElement>(null);
@@ -70,7 +78,7 @@ export function GameInspector({ entry, onClose }: { entry: ScoredGame; onClose: 
       aria-labelledby="game-inspector-title"
     >
       <div class="game-inspector-heading">
-        <span class="eyebrow">Game details</span>
+        <span class="eyebrow">{demo ? "Fictional demo" : "Game details"}</span>
         <button
           ref={closeButton}
           class="secondary-button dark compact-button inspector-close"
@@ -86,6 +94,12 @@ export function GameInspector({ entry, onClose }: { entry: ScoredGame; onClose: 
       </div>
       <div class="inspector-body">
         <h2 id="game-inspector-title">{game.name}</h2>
+        {demo && (
+          <p class="demo-notice">
+            This fictional game is here so you can try the library before the real collection is
+            published. It is not owned and will disappear automatically.
+          </p>
+        )}
         {game.edition && <p class="inspector-edition">{game.edition} edition</p>}
         <dl class="inspector-stats">
           <div>
@@ -110,7 +124,7 @@ export function GameInspector({ entry, onClose }: { entry: ScoredGame; onClose: 
           </div>
           <div>
             <dt>BoardGameGeek rating</dt>
-            <dd>{game.metadata.rating?.toFixed(1) ?? "Unknown"}</dd>
+            <dd>{demo ? "Not applicable" : (game.metadata.rating?.toFixed(1) ?? "Unknown")}</dd>
           </div>
         </dl>
 
@@ -149,26 +163,28 @@ export function GameInspector({ entry, onClose }: { entry: ScoredGame; onClose: 
         )}
 
         <div class="inspector-links">
-          {game.metadata.url && (
+          {!demo && game.metadata.url && (
             <ExternalLink href={game.metadata.url}>
               {game.bggId ? "View on BoardGameGeek" : "View product source"}
             </ExternalLink>
           )}
-          <ExternalLink
-            href={buildIssueUrl(REPOSITORY_URL, {
-              operation: "update",
-              bggId: game.bggId?.toString() ?? "",
-              sourceUrl: game.sourceUrl ?? "",
-              name: game.name,
-              slug: game.slug,
-              parentId: "",
-              parentSlug: "",
-              modes: "",
-              notes: ""
-            })}
-          >
-            Suggest edit
-          </ExternalLink>
+          {!demo && (
+            <ExternalLink
+              href={buildIssueUrl(REPOSITORY_URL, {
+                operation: "update",
+                bggId: game.bggId?.toString() ?? "",
+                sourceUrl: game.sourceUrl ?? "",
+                name: game.name,
+                slug: game.slug,
+                parentId: "",
+                parentSlug: "",
+                modes: "",
+                notes: ""
+              })}
+            >
+              Suggest edit
+            </ExternalLink>
+          )}
         </div>
       </div>
     </div>

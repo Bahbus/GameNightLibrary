@@ -35,9 +35,11 @@ flowchart LR
 ```
 
 Owner and collaborator requests are eligible for automation immediately. Public requests receive a
-suggestion label and cannot mutate inventory until a maintainer applies
-`approved-inventory-change`. Automation rejects duplicates, missing targets, malformed values,
-invalid expansion relationships, and stale or conflicting requests with an explanatory comment.
+suggestion label and cannot mutate library data until a maintainer applies
+`approved-inventory-change`. This applies to both inventory changes and wish-list suggestions.
+Automation rejects duplicates, already-owned wish-list candidates, missing targets, malformed
+values, invalid expansion relationships, and stale or conflicting requests with an explanatory
+comment.
 
 Each automation branch applies exactly one transaction against current `main`. It opens a
 non-draft pull request and dispatches validation against that exact head commit. Workflows never
@@ -83,7 +85,10 @@ notes on the relevant expansion.
 ## Wish list lifecycle
 
 Unowned games live in `data/wishlist.yaml` with a stable slug, BGG ID or public source URL, status
-(`interested`, `researching`, or `planned`), and optional priority and notes.
+(`interested`, `researching`, or `planned`), and optional priority and notes. **Wish list → Request a
+game** requires that public identity, derives the stable slug, records the request reasoning, and
+uses the same collaborator/public-approval workflow described above. The resulting pull request is
+still reviewed before the suggestion becomes public.
 
 When a wish-list game is purchased:
 
