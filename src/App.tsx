@@ -19,6 +19,7 @@ import {
 import { createStandalonePlayModes, filterAndScore, sortScoredGames } from "./lib/catalog";
 import { DEMO_GAMES } from "./lib/demoCatalog";
 import { DEFAULT_PREFERENCES, parsePreferences, serializePreferences } from "./lib/preferences";
+import { installResponsiveLayoutMotion } from "./lib/responsiveLayoutMotion";
 import { clearSetupProgress } from "./lib/setupProgress";
 import type { CatalogPayload, GroupPreferences, SortKey } from "./types";
 
@@ -93,6 +94,8 @@ export function App() {
       return [];
     }
   });
+
+  useEffect(() => installResponsiveLayoutMotion(), []);
 
   const navigateToView = useCallback(
     (nextView: AppView) => {
@@ -211,7 +214,12 @@ export function App() {
   return (
     <>
       <header class="site-header">
-        <a class="brand" href={`${import.meta.env.BASE_URL}`}>
+        <a
+          class="brand"
+          href={`${import.meta.env.BASE_URL}`}
+          data-layout-motion="site-brand"
+          data-layout-motion-at="861"
+        >
           <span class="brand-mark" aria-hidden="true">
             ⚄
           </span>
@@ -220,7 +228,11 @@ export function App() {
             <small>Library</small>
           </span>
         </a>
-        <nav aria-label="Primary">
+        <nav
+          aria-label="Primary"
+          data-layout-motion="primary-navigation"
+          data-layout-motion-at="521 861"
+        >
           {(
             [
               ["library", "Library"],
@@ -294,13 +306,17 @@ export function App() {
             class={`discovery-layout discovery-layout-${view}${inspectedEntry ? " has-inspector" : ""}`}
           >
             <FilterPanel preferences={preferences} onChange={setPreferences} games={games} />
-            <div class="discovery-content">
+            <div
+              class="discovery-content"
+              data-layout-motion="discovery-content"
+              data-layout-motion-at="1280"
+            >
               {view === "roulette" ? (
                 <Roulette games={scored} drawn={drawn} setDrawn={setDrawn} />
               ) : (
                 <section class="library-section" aria-labelledby="library-title">
                   <div class="library-toolbar">
-                    <div>
+                    <div data-layout-motion="library-heading" data-layout-motion-at="701 1081">
                       <span class="eyebrow">The shortlist</span>
                       <h2 id="library-title" aria-live="polite" aria-atomic="true">
                         {payload
@@ -308,7 +324,11 @@ export function App() {
                           : "Loading the shelves…"}
                       </h2>
                     </div>
-                    <div class="toolbar-actions">
+                    <div
+                      class="toolbar-actions"
+                      data-layout-motion="library-toolbar-actions"
+                      data-layout-motion-at="701 1081"
+                    >
                       <label class="search-field">
                         <span class="sr-only">Search library</span>
                         <input

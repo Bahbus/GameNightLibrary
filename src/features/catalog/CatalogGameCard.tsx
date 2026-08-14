@@ -37,7 +37,11 @@ export function GameCard({
   const overridden = Boolean(game.overrides && Object.keys(game.overrides).length);
 
   return (
-    <article class={`game-card${demo ? " is-demo" : ""}`}>
+    <article
+      class={`game-card${demo ? " is-demo" : ""}`}
+      data-layout-motion={`catalog-card-${game.slug}`}
+      data-layout-motion-at="701 941 1720"
+    >
       <div class="cover-wrap">
         <Cover game={game} />
         <span class="match-pill">{Math.round(entry.matchScore * 100)}% match</span>

@@ -100,7 +100,11 @@ export function Maintenance({ games }: { games: CatalogGame[] }) {
 
   return (
     <section class="maintenance-card">
-      <div class="maintenance-intro">
+      <div
+        class="maintenance-intro"
+        data-layout-motion="maintenance-intro"
+        data-layout-motion-at="941"
+      >
         <span class="eyebrow">Library management</span>
         <h1>Manage the library</h1>
         <p>
@@ -114,6 +118,8 @@ export function Maintenance({ games }: { games: CatalogGame[] }) {
       </div>
       <form
         class="maintenance-form"
+        data-layout-motion="maintenance-form"
+        data-layout-motion-at="941"
         onSubmit={(event) => {
           event.preventDefault();
           window.open(url, "_blank", "noopener,noreferrer");

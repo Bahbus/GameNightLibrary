@@ -68,7 +68,11 @@ export function Roulette({
 
   return (
     <section class="roulette-card" aria-labelledby="roulette-title">
-      <div class="roulette-copy">
+      <div
+        class="roulette-copy"
+        data-layout-motion="roulette-copy"
+        data-layout-motion-at="1500x900"
+      >
         <span class="eyebrow">Let chance break the tie</span>
         <h1 id="roulette-title">Game Night Roulette</h1>
         <p>Every qualifying game has a chance. Better preference matches get a stronger pull.</p>
@@ -100,7 +104,11 @@ export function Roulette({
           )}
         </div>
       </div>
-      <div class={`roulette-stage ${revealing ? "is-spinning" : ""}`}>
+      <div
+        class={`roulette-stage ${revealing ? "is-spinning" : ""}`}
+        data-layout-motion="roulette-stage"
+        data-layout-motion-at="1500x900"
+      >
         <RouletteWheel games={displayedGames} rotation={rotation} revealing={revealing} />
         <div class="winner-panel" aria-live="polite" aria-busy={revealing}>
           {!games.length ? (
