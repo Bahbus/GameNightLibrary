@@ -1,4 +1,4 @@
-export const gitRevisionPattern = /^[a-f0-9]{40}$/;
+const gitRevisionPattern = /^[a-f0-9]{40}$/;
 
 export interface ServiceRevision {
   revision: string;

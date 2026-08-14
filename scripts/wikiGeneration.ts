@@ -5,7 +5,7 @@ import {
   TARGET_REPOSITORY
 } from "../src/lib/projectIdentity";
 
-export const wikiSourceRepository =
+const wikiSourceRepository =
   parseGitHubRepository(process.env.GITHUB_REPOSITORY)?.fullName ?? TARGET_REPOSITORY;
 const sourceRepositoryUrl = repositoryUrl(wikiSourceRepository);
 export const wikiRepositoryUrl = `${sourceRepositoryUrl}/wiki`;
@@ -61,7 +61,7 @@ const splitTarget = (rawTarget: string) => {
 
 const isExternalTarget = (target: string) => /^(?:[a-z]+:|#)/i.test(target);
 
-export function rewriteWikiLinks(markdown: string, source: string) {
+function rewriteWikiLinks(markdown: string, source: string) {
   return markdown.replace(markdownTargetPattern, (match, prefix, rawTarget, suffix) => {
     const target = String(rawTarget).trim();
     if (!target || isExternalTarget(target)) return match;

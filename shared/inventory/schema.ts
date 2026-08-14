@@ -155,7 +155,7 @@ const gameSchema = z
   })
   .superRefine(requireLocalGameDetails);
 
-export const inventorySchema = z
+const inventorySchema = z
   .object({
     version: z.literal(1),
     games: z.array(gameSchema)
@@ -227,7 +227,7 @@ const wishlistGameSchema = z
     }
   });
 
-export const wishlistSchema = z
+const wishlistSchema = z
   .object({
     version: z.literal(1),
     games: z.array(wishlistGameSchema)

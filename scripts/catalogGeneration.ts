@@ -115,7 +115,7 @@ export async function buildCatalogPayload({
   };
 }
 
-export async function writeCatalogPayload(payload: CatalogPayload, output: URL): Promise<void> {
+async function writeCatalogPayload(payload: CatalogPayload, output: URL): Promise<void> {
   const target = fileURLToPath(output);
   const temporary = `${target}.tmp`;
   await mkdir(dirname(target), { recursive: true });

@@ -1,6 +1,6 @@
 import { csvRecords, parseCsv, recordsToCsv } from "../shared/csv.js";
 
-export const INTAKE_HEADERS = [
+const INTAKE_HEADERS = [
   "include",
   "submitted_wording",
   "proposed_title",
@@ -12,7 +12,7 @@ export const INTAKE_HEADERS = [
   "source_url"
 ] as const;
 
-export const MATCHING_HEADERS = [
+const MATCHING_HEADERS = [
   "slug",
   "kind",
   "parent_slug",
@@ -27,7 +27,7 @@ export const MATCHING_HEADERS = [
   "matching_notes"
 ] as const;
 
-export type MatchingStatus =
+type MatchingStatus =
   "matched-from-source" | "local-only" | "pending-bgg-search" | "review-shared-bgg-id";
 
 export interface IntakeRow {

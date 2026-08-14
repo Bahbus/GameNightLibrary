@@ -1,7 +1,7 @@
 import { parseCsv, recordsToCsv } from "../csv.js";
 import { SETUP_TIME_RANGE_VALUES } from "./houseOptions.js";
 
-export const HOUSE_INTAKE_HEADERS = [
+const HOUSE_INTAKE_HEADERS = [
   "slug",
   "title",
   "availability",
