@@ -105,6 +105,51 @@ test("credits BGG with its official linked mark and explains local inferences", 
   }
 });
 
+test("follows the browser color preference without storing a theme choice", async ({ page }) => {
+  const themeColors = page.locator('meta[name="theme-color"]');
+  await expect(themeColors).toHaveCount(2);
+  await expect(themeColors.nth(0)).toHaveAttribute("media", "(prefers-color-scheme: light)");
+  await expect(themeColors.nth(1)).toHaveAttribute("media", "(prefers-color-scheme: dark)");
+  await expect(page.locator('meta[name="color-scheme"]')).toHaveAttribute("content", "light dark");
+
+  await page.emulateMedia({ colorScheme: "light" });
+  const lightTheme = await page.evaluate(() => {
+    const root = globalThis.getComputedStyle(document.documentElement);
+    return {
+      colorScheme: root.colorScheme,
+      background: root.getPropertyValue("--cream").trim(),
+      surface: root.getPropertyValue("--paper").trim()
+    };
+  });
+  expect(lightTheme.colorScheme).toBe("light");
+
+  await page.emulateMedia({ colorScheme: "dark" });
+  await expect
+    .poll(() =>
+      page.evaluate(() => {
+        const root = globalThis.getComputedStyle(document.documentElement);
+        return {
+          colorScheme: root.colorScheme,
+          background: root.getPropertyValue("--cream").trim(),
+          surface: root.getPropertyValue("--paper").trim()
+        };
+      })
+    )
+    .toEqual({ colorScheme: "dark", background: "#17131d", surface: "#241d2b" });
+  expect(lightTheme.background).not.toBe("#17131d");
+  expect(lightTheme.surface).not.toBe("#241d2b");
+  expect(
+    await page.evaluate(() => globalThis.localStorage.getItem("game-night-library:theme"))
+  ).toBeNull();
+
+  await page.emulateMedia({ colorScheme: "dark", reducedMotion: "reduce" });
+  await page.getByRole("button", { name: "Roulette", exact: true }).click();
+  await page.getByRole("button", { name: "Spin the roulette" }).click();
+  await expect(page.getByText("Tonight’s pick")).toBeVisible();
+  const rouletteResult = await new AxeBuilder({ page }).analyze();
+  expect(rouletteResult.violations, "dark roulette result accessibility violations").toEqual([]);
+});
+
 test("orders related navigation together and hides completed Setup", async ({ page }) => {
   const navigation = page.getByRole("navigation", { name: "Primary" });
   await expect(navigation.getByRole("button")).toHaveText([
@@ -649,10 +694,14 @@ test("shows a local-only game with its product source and slug-based edit link",
 test("has no automatically detectable accessibility violations in any public view", async ({
   page
 }) => {
-  for (const view of ["Library", "Roulette", "Wish list", "Manage"] as const) {
-    await page.getByRole("button", { name: view, exact: true }).click();
-    const results = await new AxeBuilder({ page }).analyze();
-    expect(results.violations, `${view} accessibility violations`).toEqual([]);
+  test.setTimeout(60_000);
+  for (const colorScheme of ["light", "dark"] as const) {
+    await page.emulateMedia({ colorScheme });
+    for (const view of ["Library", "Roulette", "Wish list", "Manage"] as const) {
+      await page.getByRole("button", { name: view, exact: true }).click();
+      const results = await new AxeBuilder({ page }).analyze();
+      expect(results.violations, `${view} ${colorScheme} accessibility violations`).toEqual([]);
+    }
   }
 });
 
@@ -1158,6 +1207,7 @@ test("guides house answers one game at a time and keeps progress locally", async
 test("keeps the guided setup screen free of detectable accessibility violations", async ({
   page
 }) => {
+  test.setTimeout(60_000);
   await page.route("**/test-setup-service/api/setup/questionnaire", (route) =>
     route.fulfill({
       contentType: "application/json",
@@ -1171,8 +1221,11 @@ test("keeps the guided setup screen free of detectable accessibility violations"
   await allowSetup(page);
   await page.getByRole("button", { name: "Setup", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Tell us about the games" })).toBeVisible();
-  const results = await new AxeBuilder({ page }).analyze();
-  expect(results.violations).toEqual([]);
+  for (const colorScheme of ["light", "dark"] as const) {
+    await page.emulateMedia({ colorScheme });
+    const results = await new AxeBuilder({ page }).analyze();
+    expect(results.violations, `${colorScheme} setup accessibility violations`).toEqual([]);
+  }
 });
 
 test("waits for safe BoardGameGeek suggestions before showing editable answers", async ({

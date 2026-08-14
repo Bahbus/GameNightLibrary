@@ -9,6 +9,7 @@
     sans-serif;
   color: #231b33;
   background: #fffaf1;
+  color-scheme: light;
   font-synthesis: none;
   --ink: #231b33;
   --purple: #5c3c94;
@@ -20,7 +21,68 @@
   --cream: #fffaf1;
   --paper: #ffffff;
   --line: #ded4c7;
+  --input-line: #cfc4d8;
+  --muted: #6b6075;
+  --subtle: #786e81;
+  --control-bg: #ffffff;
+  --glass: rgba(255, 255, 255, 0.78);
+  --glass-strong: rgba(255, 255, 255, 0.96);
+  --soft: #f0eaf5;
+  --soft-purple: #f6f0ff;
+  --soft-purple-strong: #eee6ff;
+  --soft-warm: #fff8e7;
+  --cover-placeholder: #e7dfef;
+  --focus: #0b73d9;
+  --link: #5c3c94;
+  --success-ink: #214c34;
+  --success-bg: #e5f6ec;
+  --success-line: #4b8b68;
+  --warning-ink: #673b00;
+  --warning-bg: #fff2cd;
+  --warning-line: #a65d00;
+  --danger: #9d2813;
+  --overlay: rgb(35 27 51 / 55%);
+  --button-ink: #231b33;
   --shadow: 0 14px 45px rgba(43, 28, 68, 0.12);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color: #f4edf8;
+    background: #17131d;
+    color-scheme: dark;
+    --ink: #f4edf8;
+    --purple: #b99ae8;
+    --orange: #f0784f;
+    --orange-ink: #ff9b78;
+    --gold: #f5c65f;
+    --mint: #a9ddc1;
+    --cream: #17131d;
+    --paper: #241d2b;
+    --line: #514458;
+    --input-line: #65566d;
+    --muted: #c5bacb;
+    --subtle: #aea2b5;
+    --control-bg: #1b171f;
+    --glass: rgba(36, 29, 43, 0.82);
+    --glass-strong: rgba(36, 29, 43, 0.97);
+    --soft: #302738;
+    --soft-purple: #332642;
+    --soft-purple-strong: #3d2b51;
+    --soft-warm: #342b20;
+    --cover-placeholder: #3d3345;
+    --focus: #72b7ff;
+    --link: #c7a9f2;
+    --success-ink: #b9e4cd;
+    --success-bg: #173326;
+    --success-line: #4f9870;
+    --warning-ink: #f4ce83;
+    --warning-bg: #3b2c12;
+    --warning-line: #b47c25;
+    --danger: #ff9d91;
+    --overlay: rgb(8 6 11 / 72%);
+    --shadow: 0 14px 45px rgba(0, 0, 0, 0.34);
+  }
 }
 
 * {
@@ -69,7 +131,7 @@ input:focus-visible,
 select:focus-visible,
 textarea:focus-visible,
 summary:focus-visible {
-  outline: 3px solid #0b73d9;
+  outline: 3px solid var(--focus);
   outline-offset: 3px;
 }
 
@@ -79,7 +141,7 @@ summary:focus-visible {
   left: 1rem;
   top: -5rem;
   padding: 0.6rem 1rem;
-  background: white;
+  background: var(--paper);
   border: 2px solid var(--ink);
   border-radius: 0.5rem;
 }
@@ -144,7 +206,7 @@ summary:focus-visible {
 
 .brand small {
   margin-top: 0.18rem;
-  color: #695d76;
+  color: var(--muted);
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.16em;
@@ -156,14 +218,14 @@ nav {
   padding: 0.3rem;
   border: 1px solid var(--line);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.72);
+  background: var(--glass);
 }
 
 nav button {
   border: 0;
   border-radius: 999px;
   padding: 0.46rem 0.9rem;
-  color: #63586e;
+  color: var(--muted);
   background: transparent;
   font-weight: 600;
   white-space: nowrap;
@@ -232,7 +294,7 @@ main {
 .eyebrow {
   display: block;
   margin-bottom: 0.55rem;
-  color: #6f6279;
+  color: var(--muted);
   font-size: 0.72rem;
   font-weight: 800;
   letter-spacing: 0.17em;
@@ -331,10 +393,10 @@ h1 em {
 .status-banner {
   margin: 1rem 0;
   padding: 0.62rem 1rem;
-  border: 1px solid #a65d00;
+  border: 1px solid var(--warning-line);
   border-radius: 0.75rem;
-  background: #fff2cd;
-  color: #673b00;
+  background: var(--warning-bg);
+  color: var(--warning-ink);
 }
 
 .demo-banner {
@@ -345,8 +407,8 @@ h1 em {
   padding: 0.62rem 1rem;
   border: 1px solid #7b5aa9;
   border-radius: 0.75rem;
-  color: #39245b;
-  background: #f1eaff;
+  color: var(--ink);
+  background: var(--soft-purple-strong);
   font-size: 0.82rem;
 }
 
@@ -362,7 +424,7 @@ h1 em {
   padding: 1.15rem 1.6rem;
   border: 1px solid var(--line);
   border-radius: 1.25rem;
-  background: rgba(255, 255, 255, 0.96);
+  background: var(--glass-strong);
   box-shadow: 0 10px 35px rgba(43, 28, 68, 0.1);
 }
 
@@ -396,7 +458,7 @@ h1 em {
 
 label,
 legend {
-  color: #564c60;
+  color: var(--muted);
   font-size: 0.77rem;
   font-weight: 750;
   letter-spacing: 0.025em;
@@ -407,11 +469,11 @@ select,
 textarea {
   width: 100%;
   margin-top: 0.3rem;
-  border: 1px solid #cfc4d8;
+  border: 1px solid var(--input-line);
   border-radius: 0.65rem;
   padding: 0.55rem 0.8rem;
   color: var(--ink);
-  background: white;
+  background: var(--control-bg);
 }
 
 input[type="range"] {
@@ -432,7 +494,7 @@ output {
   align-items: center;
   gap: 0.55rem;
   padding: 0.5rem 0.7rem;
-  border: 1px solid #cfc4d8;
+  border: 1px solid var(--input-line);
   border-radius: 0.65rem;
 }
 
@@ -481,14 +543,14 @@ output {
   padding: 0.3rem 0.62rem;
   border: 1px solid var(--line);
   border-radius: 999px;
-  background: white;
+  background: var(--control-bg);
   cursor: pointer;
 }
 
 .chip.is-active {
   border-color: var(--purple);
-  color: var(--purple-dark);
-  background: #eee6ff;
+  color: var(--ink);
+  background: var(--soft-purple-strong);
 }
 
 .library-section {
@@ -546,7 +608,7 @@ output {
   position: relative;
   height: 220px;
   overflow: hidden;
-  background: #e7dfef;
+  background: var(--cover-placeholder);
 }
 
 .game-cover {
@@ -620,7 +682,7 @@ output {
 
 .house-rating {
   flex: none;
-  color: #725000;
+  color: var(--warning-ink);
   font-weight: 800;
 }
 
@@ -628,13 +690,13 @@ output {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 0.45rem;
-  color: #6c6176;
+  color: var(--muted);
   font-size: 0.72rem;
 }
 
 .override-note {
   margin: 0.6rem 0 0;
-  color: #765000;
+  color: var(--warning-ink);
   font-size: 0.72rem;
 }
 
@@ -646,8 +708,8 @@ output {
 .mini-badge {
   padding: 0.2rem 0.48rem;
   border-radius: 0.4rem;
-  color: #51445e;
-  background: #f0eaf5;
+  color: var(--ink);
+  background: var(--soft);
   font-size: 0.68rem;
   font-weight: 700;
   text-transform: capitalize;
@@ -655,14 +717,14 @@ output {
 
 .mini-badge {
   margin-left: 0.4rem;
-  color: #6b4300;
-  background: #ffecbd;
+  color: var(--warning-ink);
+  background: var(--warning-bg);
 }
 
 .expansion-list {
   margin-top: 0.7rem;
   padding-top: 0.55rem;
-  border-top: 1px solid #eee7df;
+  border-top: 1px solid var(--line);
   font-size: 0.78rem;
 }
 
@@ -687,7 +749,7 @@ output {
 }
 
 .card-links a {
-  color: var(--purple);
+  color: var(--link);
 }
 
 .inspector-backdrop {
@@ -695,7 +757,7 @@ output {
   z-index: 40;
   inset: 0;
   border: 0;
-  background: rgb(35 27 51 / 55%);
+  background: var(--overlay);
   cursor: pointer;
 }
 
@@ -722,7 +784,7 @@ output {
   gap: 1rem;
   padding: 0.75rem 1rem;
   border-bottom: 1px solid var(--line);
-  background: rgb(255 255 255 / 96%);
+  background: var(--glass-strong);
 }
 
 .game-inspector-heading .eyebrow {
@@ -742,7 +804,7 @@ output {
   position: relative;
   height: 230px;
   overflow: hidden;
-  background: #e7dfef;
+  background: var(--cover-placeholder);
 }
 
 .inspector-body {
@@ -756,7 +818,7 @@ output {
 }
 
 .inspector-edition {
-  color: #6c6176;
+  color: var(--muted);
   font-size: 0.8rem;
 }
 
@@ -764,8 +826,8 @@ output {
   margin: 0.7rem 0 0;
   padding: 0.6rem 0.7rem;
   border-left: 3px solid var(--purple);
-  color: #5d4d6b;
-  background: #f6f0ff;
+  color: var(--muted);
+  background: var(--soft-purple);
   font-size: 0.78rem;
   line-height: 1.45;
 }
@@ -781,11 +843,11 @@ output {
   padding: 0.55rem 0.65rem;
   border: 1px solid var(--line);
   border-radius: 0.65rem;
-  background: #fffaf1;
+  background: var(--cream);
 }
 
 .inspector-stats dt {
-  color: #74697d;
+  color: var(--subtle);
   font-size: 0.68rem;
   font-weight: 750;
 }
@@ -803,12 +865,12 @@ output {
   gap: 0.35rem 0.75rem;
   padding: 0.65rem 0;
   border-block: 1px solid var(--line);
-  color: #6c6176;
+  color: var(--muted);
   font-size: 0.75rem;
 }
 
 .inspector-shelf strong {
-  color: #24593a;
+  color: var(--success-ink);
   text-transform: capitalize;
 }
 
@@ -824,7 +886,7 @@ output {
 .inspector-note p,
 .inspector-note ul {
   margin-bottom: 0;
-  color: #655b6e;
+  color: var(--muted);
   font-size: 0.78rem;
   line-height: 1.5;
 }
@@ -852,9 +914,9 @@ output {
   align-content: center;
   padding: 2.2rem 1rem;
   text-align: center;
-  border: 2px dashed #cec2d7;
+  border: 2px dashed var(--line);
   border-radius: 1.5rem;
-  background: rgba(255, 255, 255, 0.62);
+  background: var(--glass);
 }
 
 .empty-state > span {
@@ -877,7 +939,7 @@ output {
 
 .empty-state p {
   max-width: 500px;
-  color: #6b6075;
+  color: var(--muted);
 }
 
 .primary-button,
@@ -895,7 +957,7 @@ output {
 
 .primary-button {
   border: 0;
-  color: var(--ink);
+  color: var(--button-ink);
   background: var(--orange);
   box-shadow: 3px 3px 0 #9f3315;
 }
@@ -913,7 +975,7 @@ output {
 
 .secondary-button.dark {
   border-color: var(--purple);
-  color: var(--purple);
+  color: var(--link);
 }
 
 .compact-button {
@@ -1098,7 +1160,7 @@ output {
   padding: 0.75rem;
   border: 6px solid var(--purple-dark);
   border-radius: 50%;
-  color: var(--ink);
+  color: var(--button-ink);
   background: white;
   text-align: center;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
@@ -1115,7 +1177,7 @@ output {
 }
 
 .winner-kicker {
-  color: var(--orange-ink);
+  color: #a93717;
   font-size: 0.64rem;
   font-weight: 900;
   letter-spacing: 0.12em;
@@ -1131,8 +1193,9 @@ output {
   border-top: 1px solid rgba(255, 255, 255, 0.16);
 }
 
-.match-explanation h3 {
+.match-explanation h2 {
   margin-bottom: 0.4rem;
+  font-size: 1.17rem;
 }
 
 .match-explanation ul {
@@ -1158,7 +1221,7 @@ output {
 .wishlist-heading p {
   max-width: none;
   margin: 0;
-  color: #6b6075;
+  color: var(--muted);
   line-height: 1.6;
 }
 
@@ -1171,7 +1234,7 @@ output {
   padding: 0.75rem 1rem;
   border: 1px solid var(--line);
   border-radius: 1rem;
-  background: rgba(255, 255, 255, 0.68);
+  background: var(--glass);
 }
 
 .wishlist-toolbar input {
@@ -1203,7 +1266,7 @@ output {
   gap: 1rem;
   padding: 0.8rem 1rem;
   border-bottom: 1px solid var(--line);
-  background: rgb(255 255 255 / 96%);
+  background: var(--glass-strong);
 }
 
 .wishlist-request-dialog h2,
@@ -1228,7 +1291,7 @@ output {
 
 .wishlist-request-intro {
   margin: 0 0 0.15rem;
-  color: #6b6075;
+  color: var(--muted);
   line-height: 1.5;
 }
 
@@ -1258,7 +1321,7 @@ output {
 
 .wishlist-cover {
   min-height: 210px;
-  background: #e7dfef;
+  background: var(--cover-placeholder);
 }
 
 .wishlist-cover img {
@@ -1289,7 +1352,7 @@ output {
 }
 
 .wishlist-card-copy p {
-  color: #6b6075;
+  color: var(--muted);
   line-height: 1.5;
 }
 
@@ -1320,7 +1383,7 @@ output {
   padding: clamp(1.25rem, 4vw, 2.8rem);
   border: 1px solid var(--line);
   border-radius: 1.7rem;
-  background: white;
+  background: var(--paper);
   box-shadow: var(--shadow);
 }
 
@@ -1330,14 +1393,14 @@ output {
 }
 
 .maintenance-intro p {
-  color: #6b6075;
+  color: var(--muted);
   line-height: 1.65;
 }
 
 .privacy-note {
   padding: 0.75rem 1rem;
   border-left: 4px solid var(--gold);
-  background: #fff8e7;
+  background: var(--soft-warm);
   font-size: 0.83rem;
 }
 
@@ -1381,7 +1444,7 @@ output {
 }
 
 .operation-picker label small {
-  color: #665b6f;
+  color: var(--muted);
   font-size: 0.68rem;
   font-weight: 600;
   line-height: 1.35;
@@ -1394,7 +1457,7 @@ output {
 
 .operation-picker label.is-active {
   border-color: var(--purple);
-  background: #eee6ff;
+  background: var(--soft-purple-strong);
 }
 
 .form-grid {
@@ -1410,12 +1473,12 @@ output {
 
 .form-help {
   margin: 0.9rem 0 0;
-  color: #786e81;
+  color: var(--subtle);
   font-size: 0.75rem;
 }
 
 .optional-label {
-  color: #786e81;
+  color: var(--subtle);
   font-size: 0.82em;
   font-weight: 500;
 }
@@ -1430,7 +1493,7 @@ output {
 }
 
 .expansion-control small {
-  color: #786e81;
+  color: var(--subtle);
   font-size: 0.72rem;
   font-weight: 500;
   line-height: 1.35;
@@ -1451,7 +1514,7 @@ output {
 
 .maintenance-modes > p {
   margin: 0 0 0.65rem;
-  color: #786e81;
+  color: var(--subtle);
   font-size: 0.72rem;
 }
 
@@ -1474,7 +1537,7 @@ output {
 }
 
 .maintenance-technical summary {
-  color: var(--purple-dark);
+  color: var(--link);
   font-size: 0.78rem;
   font-weight: 800;
   cursor: pointer;
@@ -1488,14 +1551,14 @@ output {
 
 .maintenance-technical p {
   margin: 0.3rem 0 0;
-  color: #786e81;
+  color: var(--subtle);
   font-size: 0.7rem;
 }
 
 .field-error {
   display: block;
   margin-top: 0.25rem;
-  color: #9d2813;
+  color: var(--danger);
   font-size: 0.72rem;
 }
 
@@ -1507,7 +1570,7 @@ footer {
   margin: 0 auto;
   padding: 1.4rem 1.5rem 2rem;
   border-top: 1px solid var(--line);
-  color: #6c6176;
+  color: var(--muted);
   font-size: 0.8rem;
 }
 
@@ -1536,6 +1599,13 @@ footer p {
 .bgg-attribution img {
   width: 171px;
   height: 38px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .bgg-attribution {
+    padding-inline: 0.25rem;
+    background: #ffffff;
+  }
 }
 
 .footer-methodology {

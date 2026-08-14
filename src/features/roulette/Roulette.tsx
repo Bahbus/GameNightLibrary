@@ -131,7 +131,7 @@ export function Roulette({
         <div class="match-explanation">
           {good && good.length > 0 && (
             <div>
-              <h3>Why it fits</h3>
+              <h2>Why it fits</h2>
               <ul>
                 {good.map((item) => (
                   <li key={item.key}>{item.label}</li>
@@ -141,7 +141,7 @@ export function Roulette({
           )}
           {misses && misses.length > 0 && (
             <div>
-              <h3>Worth knowing</h3>
+              <h2>Worth knowing</h2>
               <ul>
                 {misses.map((item) => (
                   <li key={item.key}>{item.label} is a weaker match</li>
