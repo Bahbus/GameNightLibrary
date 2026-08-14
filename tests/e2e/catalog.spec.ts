@@ -352,6 +352,29 @@ test("uses wide screens for persistent filters and a denser catalog", async ({
   expect(rouletteStageBox!.height).toBeGreaterThanOrEqual(800);
 });
 
+test("keeps the roulette wheel from shrinking across wider breakpoints", async ({
+  page
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "Responsive breakpoint contract");
+  const widths = [680, 701, 940, 941, 1280, 1499, 1500];
+  const wheelWidths: number[] = [];
+
+  for (const width of widths) {
+    await page.setViewportSize({ width, height: 1000 });
+    await page.getByRole("button", { name: "Roulette", exact: true }).click();
+    const wheelBox = await page.locator(".roulette-wheel-shell").boundingBox();
+    const stageBox = await page.locator(".roulette-stage").boundingBox();
+    expect(wheelBox).not.toBeNull();
+    expect(stageBox).not.toBeNull();
+    expect(stageBox!.height).toBeGreaterThanOrEqual(wheelBox!.height);
+    wheelWidths.push(wheelBox!.width);
+  }
+
+  for (let index = 1; index < wheelWidths.length; index += 1) {
+    expect(wheelWidths[index]).toBeGreaterThanOrEqual(wheelWidths[index - 1] - 1);
+  }
+});
+
 test("reveals a weighted roulette result and supports reset", async ({ page }) => {
   await page.getByRole("button", { name: "Roulette" }).click();
   const wheel = page.getByRole("listbox", { name: /Weighted roulette odds/ });
