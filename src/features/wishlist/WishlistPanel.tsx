@@ -100,7 +100,11 @@ export function WishlistPanel({ games }: { games: CatalogWishlistGame[] }) {
       </div>
 
       <div class="wishlist-toolbar">
-        <label class="search-field">
+        <label
+          class="search-field"
+          data-layout-motion="wishlist-search"
+          data-layout-motion-at="701"
+        >
           <span class="sr-only">Search wish list</span>
           <input
             type="search"
@@ -113,6 +117,8 @@ export function WishlistPanel({ games }: { games: CatalogWishlistGame[] }) {
           class="primary-button"
           type="button"
           ref={requestTrigger}
+          data-layout-motion="wishlist-request"
+          data-layout-motion-at="701"
           onClick={() => setRequestOpen(true)}
         >
           Request a game
@@ -230,7 +236,12 @@ export function WishlistPanel({ games }: { games: CatalogWishlistGame[] }) {
       ) : (
         <div class="wishlist-grid">
           {visible.map((game) => (
-            <article class="wishlist-card" key={game.slug}>
+            <article
+              class="wishlist-card"
+              key={game.slug}
+              data-layout-motion={`wishlist-card-${game.slug}`}
+              data-layout-motion-at="431 941 1280"
+            >
               <div class="wishlist-cover">
                 {game.metadata.cachedThumbnail ? (
                   <img

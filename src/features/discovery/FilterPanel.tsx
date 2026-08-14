@@ -72,7 +72,12 @@ export function FilterPanel({
   );
 
   return (
-    <aside class="filter-panel" aria-label="Group requirements and preferences">
+    <aside
+      class="filter-panel"
+      aria-label="Group requirements and preferences"
+      data-layout-motion="discovery-filters"
+      data-layout-motion-at="1280"
+    >
       <div class="filter-heading">
         <div>
           <span class="eyebrow">Build your game night</span>

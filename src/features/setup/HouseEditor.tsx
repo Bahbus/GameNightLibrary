@@ -295,7 +295,11 @@ export function HouseEditor({
   return (
     <section class="setup-shell" aria-labelledby="setup-title">
       <div class="setup-overview">
-        <div class="setup-overview-title">
+        <div
+          class="setup-overview-title"
+          data-layout-motion="setup-overview-title"
+          data-layout-motion-at="701 1280"
+        >
           <span class="eyebrow">Guided collection setup</span>
           <h1 id="setup-title">Tell us about the games</h1>
         </div>
@@ -316,6 +320,8 @@ export function HouseEditor({
           class="setup-navigator"
           aria-label="Setup progress and game navigation"
           ref={setupNavigatorRef}
+          data-layout-motion="setup-navigator"
+          data-layout-motion-at="1280"
         >
           <div class="setup-progress setup-progress-wide">
             <strong>
@@ -374,7 +380,12 @@ export function HouseEditor({
           </div>
         </aside>
 
-        <div class="setup-workspace-main" ref={setupMainRef}>
+        <div
+          class="setup-workspace-main"
+          ref={setupMainRef}
+          data-layout-motion="setup-workspace-main"
+          data-layout-motion-at="1280"
+        >
           <div class="setup-toolbar">
             <p class="setup-toolbar-guidance" aria-hidden="true">
               Answer what you know, one game at a time.
