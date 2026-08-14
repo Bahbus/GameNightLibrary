@@ -2,7 +2,6 @@ import type { HouseIntakeRow } from "../shared/setup/houseIntake.js";
 import type { MatchingRow } from "./intakeMatching.js";
 
 export {
-  HOUSE_INTAKE_HEADERS,
   houseIntakeToCsv,
   houseSetupRequired,
   validateHouseIntakeCsv

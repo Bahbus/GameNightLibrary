@@ -275,7 +275,7 @@ export function sortScoredGames(games: ScoredGame[], sort: GroupPreferences["sor
 
 export type RandomUnit = () => number;
 
-export function cryptoRandomUnit(): number {
+function cryptoRandomUnit(): number {
   const values = new Uint32Array(1);
   crypto.getRandomValues(values);
   return values[0] / 0x1_0000_0000;

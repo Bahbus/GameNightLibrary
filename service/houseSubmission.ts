@@ -1,8 +1,4 @@
-import {
-  houseIntakeToCsv,
-  validateHouseIntakeCsv,
-  type HouseIntakeRow
-} from "../shared/setup/houseIntake.js";
+import { houseIntakeToCsv, validateHouseIntakeCsv } from "../shared/setup/houseIntake.js";
 import { SETUP_TIME_RANGE_VALUES } from "../shared/setup/houseOptions.js";
 
 const FORMULA_PREFIX = /^[\t\r ]*[=+\-@]/;
@@ -131,8 +127,3 @@ export const questionnaireFromCsv = (sourceSha: string, csv: string) => ({
   sourceSha,
   games: validateHouseIntakeCsv(csv)
 });
-
-export type ValidatedHouseSubmission = {
-  rows: HouseIntakeRow[];
-  csv: string;
-};

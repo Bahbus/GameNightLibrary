@@ -1,7 +1,7 @@
 import type { GroupPreferences } from "../types";
 import { serializePreferences } from "./preferences";
 
-export const APP_VIEWS = ["library", "roulette", "wishlist", "maintain", "setup"] as const;
+const APP_VIEWS = ["library", "roulette", "wishlist", "maintain", "setup"] as const;
 
 export type AppView = (typeof APP_VIEWS)[number];
 
