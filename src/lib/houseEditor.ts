@@ -1,4 +1,4 @@
-export const HOUSE_ANSWER_HEADERS = [
+const HOUSE_ANSWER_HEADERS = [
   "slug",
   "title",
   "availability",

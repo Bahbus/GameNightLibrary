@@ -32,7 +32,7 @@ export interface CatalogMetadata extends Omit<BggMetadata, "bggId" | "url"> {
   cachedThumbnail?: string;
 }
 
-export interface CatalogExpansion extends OwnedExpansion {
+interface CatalogExpansion extends OwnedExpansion {
   metadata?: CatalogMetadata;
 }
 

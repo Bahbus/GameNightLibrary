@@ -51,6 +51,10 @@ const allowSetup = async (page: import("@playwright/test").Page) => {
   }, setupSession);
 };
 
+const waitForLayoutMotion = async (page: import("@playwright/test").Page) => {
+  await expect(page.locator("[data-layout-motion-active]")).toHaveCount(0, { timeout: 1_000 });
+};
+
 test.beforeEach(async ({ page }) => {
   await page.route("**/catalog.json", (route) =>
     route.fulfill({ contentType: "application/json", body: JSON.stringify(catalogFixture) })
@@ -252,6 +256,7 @@ test("keeps intermediate navigation and filters legible", async ({ page }, testI
   test.skip(testInfo.project.name !== "desktop", "Intermediate breakpoint contract");
 
   await page.setViewportSize({ width: 768, height: 1024 });
+  await waitForLayoutMotion(page);
   const navigation = page.getByRole("navigation", { name: "Primary" });
   const navigationRows = await navigation
     .getByRole("button")
@@ -265,6 +270,7 @@ test("keeps intermediate navigation and filters legible", async ({ page }, testI
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(768);
 
   await page.setViewportSize({ width: 480, height: 900 });
+  await waitForLayoutMotion(page);
   const compactNavigationRows = await navigation
     .getByRole("button")
     .evaluateAll((buttons) =>
@@ -296,6 +302,7 @@ test("keeps intermediate navigation and filters legible", async ({ page }, testI
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(480);
 
   await page.setViewportSize({ width: 1024, height: 900 });
+  await waitForLayoutMotion(page);
   const filterColumnCount = await page
     .locator(".filter-grid")
     .first()
@@ -415,6 +422,7 @@ test("keeps the roulette wheel from shrinking across wider breakpoints", async (
     for (const width of widths) {
       await page.setViewportSize({ width, height });
       await page.getByRole("button", { name: "Roulette", exact: true }).click();
+      await waitForLayoutMotion(page);
       const wheelBox = await page.locator(".roulette-wheel-shell").boundingBox();
       const stageBox = await page.locator(".roulette-stage").boundingBox();
       expect(wheelBox).not.toBeNull();
@@ -432,6 +440,91 @@ test("keeps the roulette wheel from shrinking across wider breakpoints", async (
 
   expectNondecreasing(await measureWidths([680, 701, 940, 941, 1280, 1499, 1500], 1000));
   expectNondecreasing(await measureWidths([1499, 1500, 1720], 850));
+});
+
+test("keeps the roulette heading centered as the stacked card widens", async ({
+  page
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "Responsive breakpoint contract");
+
+  for (const width of [680, 941, 1280, 1499, 1720]) {
+    await page.setViewportSize({ width, height: 850 });
+    await page.getByRole("button", { name: "Roulette", exact: true }).click();
+    await waitForLayoutMotion(page);
+
+    const cardBox = await page.getByRole("region", { name: "Game Night Roulette" }).boundingBox();
+    const headingBox = await page
+      .getByRole("heading", { name: "Game Night Roulette" })
+      .boundingBox();
+    expect(cardBox).not.toBeNull();
+    expect(headingBox).not.toBeNull();
+
+    const cardCenter = cardBox!.x + cardBox!.width / 2;
+    const headingCenter = headingBox!.x + headingBox!.width / 2;
+    expect(Math.abs(cardCenter - headingCenter)).toBeLessThanOrEqual(1);
+  }
+});
+
+test("keeps roulette counters distributed as the viewport widens", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "Responsive roulette contract");
+  await page.emulateMedia({ reducedMotion: "reduce" });
+
+  let previousWidth = 0;
+  for (const width of [1280, 1499, 1500, 1720]) {
+    await page.setViewportSize({ width, height: 1000 });
+    await page.getByRole("button", { name: "Roulette", exact: true }).click();
+
+    const measurement = await page.locator(".odds-note").evaluate((element) => {
+      const container = element.getBoundingClientRect();
+      const centers = [...element.querySelectorAll("span")].map((span) => {
+        const rect = span.getBoundingClientRect();
+        return (rect.left + rect.width / 2 - container.left) / container.width;
+      });
+      return { width: container.width, centers };
+    });
+
+    expect(measurement.width).toBeGreaterThanOrEqual(previousWidth - 1);
+    expect(measurement.centers[0]).toBeCloseTo(1 / 6, 1);
+    expect(measurement.centers[1]).toBeCloseTo(1 / 2, 1);
+    expect(measurement.centers[2]).toBeCloseTo(5 / 6, 1);
+    previousWidth = measurement.width;
+  }
+});
+
+test("eases structural breakpoint shifts and respects reduced motion", async ({
+  page
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "Responsive motion contract");
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.setViewportSize({ width: 1279, height: 1000 });
+  const content = page.locator(".discovery-content");
+  await expect(content).not.toHaveAttribute("data-layout-motion-active", "");
+
+  await page.setViewportSize({ width: 1280, height: 1000 });
+  await expect(content).toHaveAttribute("data-layout-motion-active", "");
+  const movingBox = await content.boundingBox();
+  await expect(content).not.toHaveAttribute("data-layout-motion-active", "", { timeout: 1_000 });
+  const settledBox = await content.boundingBox();
+  expect(movingBox).not.toBeNull();
+  expect(settledBox).not.toBeNull();
+  expect(movingBox!.x).toBeLessThan(settledBox!.x);
+
+  await page.getByRole("button", { name: "Roulette", exact: true }).click();
+  await page.setViewportSize({ width: 1499, height: 1000 });
+  await waitForLayoutMotion(page);
+  await page.setViewportSize({ width: 1500, height: 1000 });
+  await expect(page.locator(".roulette-copy")).toHaveAttribute("data-layout-motion-active", "");
+  await expect(page.locator(".roulette-stage")).toHaveAttribute("data-layout-motion-active", "");
+  await waitForLayoutMotion(page);
+
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.setViewportSize({ width: 1499, height: 1000 });
+  await page.waitForTimeout(50);
+  await expect(page.locator(".roulette-copy")).not.toHaveAttribute("data-layout-motion-active", "");
+  await expect(page.locator(".roulette-stage")).not.toHaveAttribute(
+    "data-layout-motion-active",
+    ""
+  );
 });
 
 test("reveals a weighted roulette result and supports reset", async ({ page }) => {

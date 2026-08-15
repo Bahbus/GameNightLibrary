@@ -52,7 +52,7 @@ export function parseBggSearch(xml: string): BggSearchCandidate[] {
   });
 }
 
-export function normalizeMatchTitle(value: string): string {
+function normalizeMatchTitle(value: string): string {
   return value
     .normalize("NFKD")
     .replace(/[\u0300-\u036f]/g, "")
@@ -170,7 +170,7 @@ export async function buildMatchReport(
   return report;
 }
 
-export const MATCH_REPORT_HEADERS = [
+const MATCH_REPORT_HEADERS = [
   "slug",
   "kind",
   "parent_slug",

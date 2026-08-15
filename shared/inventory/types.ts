@@ -65,7 +65,7 @@ export interface Inventory {
   games: InventoryGame[];
 }
 
-export type WishlistStatus = "interested" | "researching" | "planned";
+type WishlistStatus = "interested" | "researching" | "planned";
 
 export interface WishlistGame {
   slug: string;

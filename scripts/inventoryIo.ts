@@ -4,7 +4,7 @@ import { parseInventory, parseWishlist } from "../shared/inventory/schema.js";
 import type { Inventory, Wishlist } from "../shared/inventory/types.js";
 
 export const INVENTORY_PATH = new URL("../data/inventory.yaml", import.meta.url);
-export const WISHLIST_PATH = new URL("../data/wishlist.yaml", import.meta.url);
+const WISHLIST_PATH = new URL("../data/wishlist.yaml", import.meta.url);
 
 export async function readInventory(path = INVENTORY_PATH): Promise<Inventory> {
   const source = await readFile(path, "utf8");
