@@ -52,6 +52,12 @@ const allowSetup = async (page: import("@playwright/test").Page) => {
 };
 
 const waitForLayoutMotion = async (page: import("@playwright/test").Page) => {
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) =>
+        globalThis.requestAnimationFrame(() => globalThis.requestAnimationFrame(() => resolve()))
+      )
+  );
   await expect(page.locator("[data-layout-motion-active]")).toHaveCount(0, { timeout: 1_000 });
 };
 
@@ -920,6 +926,11 @@ test("offers fictional examples only while an empty collection still needs Setup
   await page.reload();
 
   await expect(page.getByText("You’re exploring fictional demo games.")).toBeVisible();
+  await page.setViewportSize({ width: 480, height: 900 });
+  await waitForLayoutMotion(page);
+  const demoBannerBox = await page.locator(".demo-banner").boundingBox();
+  const demoFilterBox = await page.locator(".filter-panel").boundingBox();
+  expect(demoFilterBox!.y).toBeGreaterThanOrEqual(demoBannerBox!.y + demoBannerBox!.height);
   await expect(page.getByRole("heading", { name: "Clockwork Café" })).toBeVisible();
   await expect(page.getByText("Fictional example").first()).toBeVisible();
   await expect(page.getByRole("link", { name: /Suggest an edit/ })).toHaveCount(0);

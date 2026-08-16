@@ -434,6 +434,10 @@ h1 em {
   margin-top: 1.5rem;
 }
 
+.demo-banner + .discovery-layout-library .filter-panel {
+  margin-top: 0;
+}
+
 .filter-heading,
 .library-toolbar,
 .card-title-row,
