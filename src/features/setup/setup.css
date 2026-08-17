@@ -130,6 +130,12 @@
   font-size: 0.82rem;
 }
 
+.setup-download-guidance {
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
 .setup-complete {
   display: grid;
   justify-items: start;
@@ -170,6 +176,10 @@
 
 .setup-autosave-error {
   color: var(--danger);
+}
+
+.setup-downloads .setup-autosave {
+  display: none;
 }
 
 .setup-card {
@@ -469,15 +479,7 @@
   }
 
   .setup-overview-copy {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border: 0;
+    display: none;
   }
 
   .setup-workspace {
@@ -557,6 +559,14 @@
   .setup-toolbar-guidance {
     display: block;
   }
+
+  .setup-download-guidance {
+    display: none;
+  }
+
+  .setup-downloads .setup-autosave {
+    display: inline;
+  }
 }
 
 @media (max-width: 940px) {
@@ -574,7 +584,7 @@
 @media (min-width: 701px) and (max-width: 1279px) {
   .setup-overview {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(260px, 360px);
+    grid-template-columns: minmax(0, 1fr) fit-content(360px);
     align-items: end;
     gap: 0.45rem 1.5rem;
   }
@@ -583,7 +593,13 @@
     grid-row: 1 / span 2;
   }
 
-  .setup-overview-copy,
+  .setup-overview-copy {
+    grid-column: 2;
+    justify-self: end;
+    width: max-content;
+    max-width: 100%;
+  }
+
   .setup-progress-compact {
     grid-column: 2;
     justify-self: end;
