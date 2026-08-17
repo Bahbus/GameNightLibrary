@@ -1422,15 +1422,39 @@ test("keeps intermediate setup guidance and actions legible", async ({ page }, t
   expect(progressBox!.width).toBeLessThan(360);
 
   const selectorBox = await page.locator(".setup-toolbar > label").boundingBox();
+  const selectorControlBox = await page.getByLabel("Jump to a game").boundingBox();
+  const questionnaireControlBox = await page.getByLabel("Is it available?").boundingBox();
   const guidanceBox = await page.locator(".setup-toolbar-guidance").boundingBox();
   expect(selectorBox!.x + selectorBox!.width).toBeLessThan(guidanceBox!.x);
-  expect(guidanceBox!.y + guidanceBox!.height / 2).toBeCloseTo(
-    selectorBox!.y + selectorBox!.height / 2,
-    0
-  );
+  expect(selectorControlBox!.width).toBeCloseTo(questionnaireControlBox!.width, 0);
+  expect(
+    Math.abs(guidanceBox!.y + guidanceBox!.height / 2 - (selectorBox!.y + selectorBox!.height / 2))
+  ).toBeLessThanOrEqual(3);
+  expect(
+    await page
+      .locator(".setup-toolbar-guidance")
+      .evaluate((element) => Number.parseFloat(globalThis.getComputedStyle(element).fontSize))
+  ).toBeGreaterThan(13);
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(800);
 
+  await page.setViewportSize({ width: 1024, height: 900 });
+  await waitForLayoutMotion(page);
+  const mediumSelectorBox = await page.getByLabel("Jump to a game").boundingBox();
+  const mediumGuidanceBox = await page.locator(".setup-toolbar-guidance").boundingBox();
+  const toolbarContentRight = await page.locator(".setup-toolbar").evaluate((toolbar) => {
+    const box = toolbar.getBoundingClientRect();
+    return box.right - Number.parseFloat(globalThis.getComputedStyle(toolbar).paddingRight);
+  });
+  expect(
+    Math.abs(
+      mediumGuidanceBox!.x +
+        mediumGuidanceBox!.width / 2 -
+        (mediumSelectorBox!.x + mediumSelectorBox!.width + toolbarContentRight) / 2
+    )
+  ).toBeLessThanOrEqual(1);
+
   await page.setViewportSize({ width: 480, height: 900 });
+  await waitForLayoutMotion(page);
   const compactCopyBox = await page.locator(".setup-overview-copy").boundingBox();
   const compactProgressBox = await page.locator(".setup-progress-compact").boundingBox();
   expect(compactProgressBox!.y + compactProgressBox!.height).toBeLessThan(compactCopyBox!.y);
@@ -1438,6 +1462,7 @@ test("keeps intermediate setup guidance and actions legible", async ({ page }, t
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(480);
 
   await page.setViewportSize({ width: 320, height: 800 });
+  await waitForLayoutMotion(page);
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(320);
   await expect(page.getByRole("heading", { name: "Accessible Game" })).toBeVisible();
 });
