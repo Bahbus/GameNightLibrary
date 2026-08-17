@@ -148,6 +148,9 @@ export function HouseEditor({
   const knownSlugs = new Set(sourceGames.map((game) => game.slug));
   const completed = new Set(progress.completedSlugs.filter((slug) => knownSlugs.has(slug)));
   const percent = games.length ? Math.round((completed.size / games.length) * 100) : 0;
+  const progressStatus = progressSaved
+    ? "Progress saves automatically on this device."
+    : "This browser could not save progress automatically.";
   const gameNavigation = games
     .map((game, gameIndex) => ({ game, gameIndex }))
     .sort((left, right) =>
@@ -303,7 +306,9 @@ export function HouseEditor({
           <span class="eyebrow">Guided collection setup</span>
           <h1 id="setup-title">Tell us about the games</h1>
         </div>
-        <p class="setup-overview-copy">Answer what you know, one game at a time.</p>
+        <p class={`setup-overview-copy${progressSaved ? "" : " setup-autosave-error"}`}>
+          {progressStatus}
+        </p>
         <div class="setup-progress setup-progress-compact">
           <strong>
             {completed.size} of {games.length}
@@ -387,9 +392,7 @@ export function HouseEditor({
           data-layout-motion-at="1280"
         >
           <div class="setup-toolbar">
-            <p class="setup-toolbar-guidance" aria-hidden="true">
-              Answer what you know, one game at a time.
-            </p>
+            <p class="setup-toolbar-guidance">Answer what you know, one game at a time.</p>
             <label>
               Jump to a game
               <select
@@ -405,12 +408,11 @@ export function HouseEditor({
               </select>
             </label>
             <div class="setup-downloads">
+              <span class="setup-download-guidance">Answer what you know, one game at a time.</span>
               <span
                 class={progressSaved ? "setup-autosave" : "setup-autosave setup-autosave-error"}
               >
-                {progressSaved
-                  ? "Progress saves automatically on this device."
-                  : "This browser could not save progress automatically."}
+                {progressStatus}
               </span>
               <button
                 class="secondary-button dark"

@@ -1198,20 +1198,20 @@ test("guides house answers one game at a time and keeps progress locally", async
     await expect(toolbarGuidance).toHaveText("Answer what you know, one game at a time.");
     const guidanceBox = await toolbarGuidance.boundingBox();
     const autosaveBox = await page.locator(".setup-autosave").boundingBox();
-    const overviewCopyBox = await page.locator(".setup-overview-copy").boundingBox();
     expect(guidanceBox!.x + guidanceBox!.width).toBeLessThan(autosaveBox!.x);
-    expect(overviewCopyBox!.width).toBe(1);
-    expect(overviewCopyBox!.height).toBe(1);
+    await expect(page.locator(".setup-overview-copy")).toBeHidden();
+    await expect(page.locator(".setup-download-guidance")).toBeHidden();
   } else {
     await expect(setupNavigator).toBeHidden();
     await expect(page.getByLabel("Jump to a game")).toBeVisible();
+    await expect(page.locator(".setup-overview-copy")).toHaveText(
+      "Progress saves automatically on this device."
+    );
+    await expect(page.locator(".setup-download-guidance")).toHaveText(
+      "Answer what you know, one game at a time."
+    );
+    await expect(page.locator(".setup-autosave")).toBeHidden();
   }
-  await expect(page.locator(".setup-overview-copy")).toHaveText(
-    "Answer what you know, one game at a time."
-  );
-  await expect(page.locator(".setup-autosave")).toHaveText(
-    "Progress saves automatically on this device."
-  );
   await expect(
     page.locator(".setup-progress:visible").getByRole("progressbar", { name: "Setup completion" })
   ).toBeVisible();
@@ -1237,7 +1237,9 @@ test("guides house answers one game at a time and keeps progress locally", async
   await expect(
     page.getByRole("group", { name: "Content considerations" }).getByLabel("Horror")
   ).toBeChecked();
-  await expect(page.getByText("Progress saves automatically on this device.")).toBeVisible();
+  await expect(page.locator(".setup-overview-copy:visible, .setup-autosave:visible")).toHaveText(
+    "Progress saves automatically on this device."
+  );
   await expect(page.getByRole("button", { name: "Back up progress" })).toHaveCount(0);
   await expect(page.getByText("Restore progress", { exact: true })).toHaveCount(0);
   await page.getByRole("button", { name: "Save & next" }).click();
@@ -1421,11 +1423,12 @@ test("keeps intermediate setup guidance and actions legible", async ({ page }, t
   expect(progressBox!.x).toBeGreaterThanOrEqual(copyBox!.x);
   expect(progressBox!.y + progressBox!.height).toBeLessThan(copyBox!.y);
   expect(progressBox!.width).toBeCloseTo(copyBox!.width, 0);
+  expect(progressBox!.width).toBeLessThan(360);
 
-  const autosaveBox = await page.locator(".setup-autosave").boundingBox();
+  const guidanceBox = await page.locator(".setup-download-guidance").boundingBox();
   const downloadButton = page.getByRole("button", { name: "Download CSV copy" });
   const downloadBox = await downloadButton.boundingBox();
-  expect(downloadBox!.y).toBeGreaterThan(autosaveBox!.y);
+  expect(downloadBox!.y).toBeGreaterThan(guidanceBox!.y);
   expect(
     await downloadButton.evaluate(
       (button) => globalThis.getComputedStyle(button).whiteSpace === "nowrap"
