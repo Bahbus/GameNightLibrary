@@ -1,54 +1,10 @@
-const HOUSE_ANSWER_HEADERS = [
-  "slug",
-  "title",
-  "availability",
-  "learned",
-  "shelf",
-  "house_rating",
-  "setup_time_range",
-  "teach_difficulty",
-  "table_space",
-  "interaction",
-  "luck",
-  "downtime",
-  "modes",
-  "moods",
-  "accessibility_flags",
-  "content_flags",
-  "recommendation_notes",
-  "local_values_required",
-  "local_min_players",
-  "local_max_players",
-  "local_min_minutes",
-  "local_max_minutes",
-  "local_min_age"
-] as const;
+import {
+  houseAnswersToCsv as serializeHouseAnswers,
+  parseHouseAnswer,
+  type HouseAnswer as SharedHouseAnswer
+} from "../../shared/setup/houseAnswers";
 
-export interface HouseAnswer {
-  slug: string;
-  title: string;
-  availability: string;
-  learned: string;
-  shelf: string;
-  houseRating: string;
-  setupTimeRange: string;
-  teachDifficulty: string;
-  tableSpace: string;
-  interaction: string;
-  luck: string;
-  downtime: string;
-  modes: string;
-  moods: string;
-  accessibilityFlags: string;
-  contentFlags: string;
-  recommendationNotes: string;
-  localValuesRequired: string;
-  localMinPlayers: string;
-  localMaxPlayers: string;
-  localMinMinutes: string;
-  localMaxMinutes: string;
-  localMinAge: string;
-}
+export type HouseAnswer = SharedHouseAnswer;
 
 export interface HouseEditorDataset {
   schemaVersion: 2;
@@ -106,21 +62,12 @@ export function parseHouseEditorDataset(value: unknown): HouseEditorDataset {
   const slugs = new Set<string>();
   const games = value.games
     .map((candidate) => {
-      if (
-        typeof candidate !== "object" ||
-        candidate === null ||
-        !("slug" in candidate) ||
-        typeof candidate.slug !== "string" ||
-        !("title" in candidate) ||
-        typeof candidate.title !== "string"
-      ) {
-        throw new Error("The setup questionnaire contains an invalid game.");
+      const game = parseHouseAnswer(candidate, "The setup questionnaire game");
+      if (slugs.has(game.slug)) {
+        throw new Error(`The setup questionnaire repeats ${game.slug}.`);
       }
-      if (slugs.has(candidate.slug)) {
-        throw new Error(`The setup questionnaire repeats ${candidate.slug}.`);
-      }
-      slugs.add(candidate.slug);
-      return candidate as unknown as HouseAnswer;
+      slugs.add(game.slug);
+      return game;
     })
     .sort((left, right) =>
       left.title.localeCompare(right.title, "en", { numeric: true, sensitivity: "base" })
@@ -171,37 +118,14 @@ const normalizeList = (value: string) =>
     .filter(Boolean)
     .join(";");
 
-const quoteCsv = (value: string) =>
-  /[",\r\n]/.test(value) ? `"${value.replaceAll('"', '""')}"` : value;
-
 export function houseAnswersToCsv(games: HouseAnswer[]): string {
-  const records = games.map((game) => [
-    game.slug,
-    game.title,
-    game.availability,
-    game.learned,
-    game.shelf,
-    game.houseRating,
-    game.setupTimeRange,
-    game.teachDifficulty,
-    game.tableSpace,
-    game.interaction,
-    game.luck,
-    game.downtime,
-    normalizeList(game.modes),
-    normalizeList(game.moods),
-    normalizeList(game.accessibilityFlags),
-    normalizeList(game.contentFlags),
-    game.recommendationNotes,
-    game.localValuesRequired,
-    game.localMinPlayers,
-    game.localMaxPlayers,
-    game.localMinMinutes,
-    game.localMaxMinutes,
-    game.localMinAge
-  ]);
-  return [
-    HOUSE_ANSWER_HEADERS.map(quoteCsv).join(","),
-    ...records.map((record) => record.map(quoteCsv).join(","))
-  ].join("\n");
+  return serializeHouseAnswers(
+    games.map((game) => ({
+      ...game,
+      modes: normalizeList(game.modes),
+      moods: normalizeList(game.moods),
+      accessibilityFlags: normalizeList(game.accessibilityFlags),
+      contentFlags: normalizeList(game.contentFlags)
+    }))
+  );
 }
