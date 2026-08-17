@@ -1457,12 +1457,18 @@ test("keeps intermediate setup guidance and actions legible", async ({ page }, t
   await waitForLayoutMotion(page);
   const compactCopyBox = await page.locator(".setup-overview-copy").boundingBox();
   const compactProgressBox = await page.locator(".setup-progress-compact").boundingBox();
+  const compactSelectorBox = await page.getByLabel("Jump to a game").boundingBox();
+  const compactQuestionnaireBox = await page.getByLabel("Is it available?").boundingBox();
   expect(compactProgressBox!.y + compactProgressBox!.height).toBeLessThan(compactCopyBox!.y);
   expect(compactProgressBox!.width).toBeCloseTo(compactCopyBox!.width, 0);
+  expect(compactSelectorBox!.width).toBeCloseTo(compactQuestionnaireBox!.width, 0);
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(480);
 
   await page.setViewportSize({ width: 320, height: 800 });
   await waitForLayoutMotion(page);
+  const narrowSelectorBox = await page.getByLabel("Jump to a game").boundingBox();
+  const narrowQuestionnaireBox = await page.getByLabel("Is it available?").boundingBox();
+  expect(narrowSelectorBox!.width).toBeCloseTo(narrowQuestionnaireBox!.width, 0);
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(320);
   await expect(page.getByRole("heading", { name: "Accessible Game" })).toBeVisible();
 });
