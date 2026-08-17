@@ -673,7 +673,11 @@
   }
 
   .setup-toolbar {
-    padding-inline: 1rem;
+    padding-inline: 1.3rem;
+  }
+
+  .setup-toolbar > label {
+    width: 100%;
   }
 
   .setup-card > header,
