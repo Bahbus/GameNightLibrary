@@ -1200,14 +1200,13 @@ test("guides house answers one game at a time and keeps progress locally", async
     const autosaveBox = await page.locator(".setup-autosave").boundingBox();
     expect(guidanceBox!.x + guidanceBox!.width).toBeLessThan(autosaveBox!.x);
     await expect(page.locator(".setup-overview-copy")).toBeHidden();
-    await expect(page.locator(".setup-download-guidance")).toBeHidden();
   } else {
     await expect(setupNavigator).toBeHidden();
     await expect(page.getByLabel("Jump to a game")).toBeVisible();
     await expect(page.locator(".setup-overview-copy")).toHaveText(
       "Progress saves automatically on this device."
     );
-    await expect(page.locator(".setup-download-guidance")).toHaveText(
+    await expect(page.locator(".setup-toolbar-guidance")).toHaveText(
       "Answer what you know, one game at a time."
     );
     await expect(page.locator(".setup-autosave")).toBeHidden();
@@ -1307,10 +1306,7 @@ test("guides house answers one game at a time and keeps progress locally", async
     await page.evaluate(() => globalThis.localStorage.getItem("game-night-library:setup-progress"))
   ).toBeNull();
 
-  const downloadPromise = page.waitForEvent("download");
-  await page.getByRole("button", { name: "Download CSV copy" }).click();
-  const download = await downloadPromise;
-  expect(download.suggestedFilename()).toBe("inventory-house-answers.csv");
+  await expect(page.getByRole("button", { name: "Download CSV copy" })).toHaveCount(0);
 
   await page.reload();
   await page.getByRole("button", { name: "Setup", exact: true }).click();
@@ -1425,15 +1421,13 @@ test("keeps intermediate setup guidance and actions legible", async ({ page }, t
   expect(progressBox!.width).toBeCloseTo(copyBox!.width, 0);
   expect(progressBox!.width).toBeLessThan(360);
 
-  const guidanceBox = await page.locator(".setup-download-guidance").boundingBox();
-  const downloadButton = page.getByRole("button", { name: "Download CSV copy" });
-  const downloadBox = await downloadButton.boundingBox();
-  expect(downloadBox!.y).toBeGreaterThan(guidanceBox!.y);
-  expect(
-    await downloadButton.evaluate(
-      (button) => globalThis.getComputedStyle(button).whiteSpace === "nowrap"
-    )
-  ).toBe(true);
+  const selectorBox = await page.locator(".setup-toolbar > label").boundingBox();
+  const guidanceBox = await page.locator(".setup-toolbar-guidance").boundingBox();
+  expect(selectorBox!.x + selectorBox!.width).toBeLessThan(guidanceBox!.x);
+  expect(guidanceBox!.y + guidanceBox!.height / 2).toBeCloseTo(
+    selectorBox!.y + selectorBox!.height / 2,
+    0
+  );
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(800);
 
   await page.setViewportSize({ width: 480, height: 900 });

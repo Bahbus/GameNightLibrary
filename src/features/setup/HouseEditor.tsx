@@ -21,15 +21,6 @@ import {
   type HowItPlaysSuggestion
 } from "../../lib/setupSuggestions";
 
-const download = (name: string, content: string, type: string) => {
-  const url = URL.createObjectURL(new window.Blob([content], { type }));
-  const anchor = document.createElement("a");
-  anchor.href = url;
-  anchor.download = name;
-  anchor.click();
-  URL.revokeObjectURL(url);
-};
-
 export function HouseEditor({
   serviceUrl,
   grant,
@@ -407,26 +398,9 @@ export function HouseEditor({
                 ))}
               </select>
             </label>
-            <div class="setup-downloads">
-              <span class="setup-download-guidance">Answer what you know, one game at a time.</span>
-              <span
-                class={progressSaved ? "setup-autosave" : "setup-autosave setup-autosave-error"}
-              >
-                {progressStatus}
-              </span>
-              <button
-                class="secondary-button dark"
-                onClick={() =>
-                  download(
-                    "inventory-house-answers.csv",
-                    `${houseAnswersToCsv(games)}\n`,
-                    "text/csv;charset=utf-8"
-                  )
-                }
-              >
-                Download CSV copy
-              </button>
-            </div>
+            <span class={progressSaved ? "setup-autosave" : "setup-autosave setup-autosave-error"}>
+              {progressStatus}
+            </span>
           </div>
 
           {completed.size === games.length && (

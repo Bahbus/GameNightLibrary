@@ -124,16 +124,10 @@
 }
 
 .setup-toolbar-guidance {
-  display: none;
-  margin: 0;
+  order: 2;
+  margin: 0 0 0 auto;
   color: var(--muted);
   font-size: 0.82rem;
-}
-
-.setup-download-guidance {
-  color: var(--muted);
-  font-size: 0.78rem;
-  line-height: 1.35;
 }
 
 .setup-complete {
@@ -161,13 +155,8 @@
   width: min(420px, 100%);
 }
 
-.setup-downloads {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-}
-
 .setup-autosave {
+  display: none;
   max-width: 19rem;
   color: var(--muted);
   font-size: 0.78rem;
@@ -176,10 +165,6 @@
 
 .setup-autosave-error {
   color: var(--danger);
-}
-
-.setup-downloads .setup-autosave {
-  display: none;
 }
 
 .setup-card {
@@ -558,14 +543,13 @@
 
   .setup-toolbar-guidance {
     display: block;
+    order: 0;
+    margin-left: 0;
   }
 
-  .setup-download-guidance {
-    display: none;
-  }
-
-  .setup-downloads .setup-autosave {
+  .setup-autosave {
     display: inline;
+    margin-left: auto;
   }
 }
 
@@ -628,14 +612,9 @@
     width: 100%;
   }
 
-  .setup-downloads {
-    display: grid;
-    justify-items: end;
-    gap: 0.3rem;
-  }
-
-  .setup-downloads .secondary-button {
-    white-space: nowrap;
+  .setup-toolbar-guidance {
+    align-self: center;
+    text-align: right;
   }
 }
 
@@ -677,9 +656,10 @@
     width: 100%;
   }
 
-  .setup-downloads {
-    align-items: stretch;
-    flex-direction: column;
+  .setup-toolbar-guidance {
+    width: 100%;
+    margin-left: 0;
+    text-align: left;
   }
 
   .setup-card > header,
