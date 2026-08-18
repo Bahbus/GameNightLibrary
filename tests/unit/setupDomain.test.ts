@@ -20,6 +20,7 @@ describe("shared setup domain", () => {
         "shared/inventory/requestFields.ts",
         "shared/inventory/schema.ts",
         "shared/inventory/types.ts",
+        "shared/setup/houseAnswers.ts",
         "shared/setup/houseIntake.ts",
         "shared/setup/houseOptions.ts",
         "shared/setup/setupSuggestions.ts",

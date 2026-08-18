@@ -44,6 +44,20 @@ describe("browser house editor", () => {
     expect(() =>
       parseHouseEditorDataset({ schemaVersion: 2, sourceSha, games: [answer(), answer()] })
     ).toThrow(/repeats example-game/);
+    expect(() =>
+      parseHouseEditorDataset({
+        schemaVersion: 2,
+        sourceSha,
+        games: [{ ...answer(), availability: 1 }]
+      })
+    ).toThrow(/invalid availability/);
+    expect(() =>
+      parseHouseEditorDataset({
+        schemaVersion: 2,
+        sourceSha,
+        games: [{ ...answer(), recommendationNotes: undefined }]
+      })
+    ).toThrow(/invalid recommendationNotes/);
   });
 
   it("sorts questionnaire games alphabetically for navigation", () => {
